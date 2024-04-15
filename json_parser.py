@@ -20,7 +20,7 @@ def html_to_bbcode(html_str: str):
 def latex_to_bbcode(text: str):
 
     def _latex_to_bbcode(match:re.Match):
-        text = match.group(0)[1:-1]
+        text = match.group(0)[1:-1] # Strip dollars
         # This should be done with a recursive parser to capture
         # pairs of {} parentheses easily. Since we don't have that,
         # we need to ensure that parentheses are not nested while
@@ -60,6 +60,7 @@ def latex_to_bbcode(text: str):
 
     return re.sub(r'\$(.*?)\$', _latex_to_bbcode, text)
 
+# Converts $...$ to \(...\)
 def latex_dollar_to_pars(latex_str: str):
     return re.sub(r'\$(.*?)\$', r'\\(\1\\)', latex_str)
 
@@ -107,6 +108,7 @@ class json_parser:
 
     def _parse_tree(self, node, category, questions):
         if len(node['children']) == 0:
+            # Strip the first two chards from the category_id ('1.')
             new_category = exam_category(category_id = node['id'][2:], category_name = node['name'], parent = category)
             self._extract_questions(node['questions'], new_category, questions)
         else:
@@ -117,7 +119,6 @@ class json_parser:
 
     def _extract_questions(self, node, category, questions):
         for question in node:
-#           print(question['id'])
             q = exam_question(question_id = question['id'],
                               question_text = self._process_text(question['question']),
                               answer_0 = self._process_text(question['answers'][0]),
@@ -128,7 +129,8 @@ class json_parser:
                               parent = category)
             questions.append(q)
 
-    def _process_text(self, text):
+    # Consecutively run each processor on text input
+    def _process_text(self, text:str):
         for p in self.text_processors:
             text = p(text)
         return text
