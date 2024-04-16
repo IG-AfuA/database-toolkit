@@ -1,7 +1,20 @@
 Overview
 ========
 
-This repository contains tools to process questions for the amateur radio exam that are published in [the following repository](https://github.com/ccoors/afu-group-trainer) by Christian F Coors. Thus, you are expected to check out this repository in the root folder. A git submodule is in place for this purpose.
+This repository contains tools to process questions for the amateur radio exam that are published in [the following repository](https://github.com/ccoors/afu-group-trainer) by Christian F Coors. Thus, you are expected to check out this repository in the root folder. A git submodule is in place for this purpose. In consequence, we recommend to check out the codebase using
+
+```
+$ git clone --recurse-submodules https://github.com/IG-AfuA/database-toolkit.git
+```
+
+or, alternatively,
+
+```
+$ git clone https://github.com/IG-AfuA/database-toolkit.git
+$ cd database-toolkit
+$ git submodule update --init --recursive
+```
+
 
 Converter for Moodle
 ====================
