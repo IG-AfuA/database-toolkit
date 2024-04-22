@@ -20,15 +20,11 @@ def html_to_bbcode(html_str: str):
 
     return html_str
 
-def latex_to_bbcode(text: str):
+def latex_to_utf8(text: str):
 
-    def _latex_to_bbcode(match:re.Match):
-        text = match.group(0)[1:-1] # Strip dollars
-        # This should be done with a recursive parser to capture
-        # pairs of {} parentheses easily. Since we don't have that,
-        # we need to ensure that parentheses are not nested while
-        # substituting (e.g. with [^{]*).
-        text = re.sub(r'\\,', '', text)                         # Commas separating thousandth, as in 4,200,000
+    def _latex_to_utf8(match:re.Match):
+        text = match.group(0)
+        text = re.sub(r'\\,', '', text)          # Commas separating thousandth, as in 4,200,000
         text = re.sub(r'\\pi', 'π', text)
         text = re.sub(r'\\lambda', 'λ', text)
         text = re.sub(r'\\Delta ?', 'Δ', text)
@@ -37,7 +33,25 @@ def latex_to_bbcode(text: str):
         text = re.sub(r'\\approx', '≈', text)
         text = re.sub(r'\\cdot{}', '·', text)
         text = re.sub(r'\\cdot ?', '·', text)
-        text = re.sub(r'\^{\\circ}', '°', text)                 # Degree sign (for angle)
+        text = re.sub(r'\^{\\circ}', '°', text)  # Degree sign (for angle)
+
+        if '\\' not in text and '_' not in text and '^' not in text:
+            # String is latex-free now, so we can strip the dollars
+            return text[1:-1]
+        else:
+            return text
+
+
+    return re.sub(r'\$(.*?)\$', _latex_to_utf8, text)
+
+def latex_to_bbcode(text: str):
+
+    def _latex_to_bbcode(match:re.Match):
+        text = match.group(0)[1:-1] # Strip dollars
+        # This should be done with a recursive parser to capture
+        # pairs of {} parentheses easily. Since we don't have that,
+        # we need to ensure that parentheses are not nested while
+        # substituting (e.g. with [^{]*).
 
         text = re.sub(r'\^{([^{]*?)}', r'[sup]\1[/sup]', text)
         text = re.sub(r'\^([^{])', r'[sup]\1[/sup]', text)
