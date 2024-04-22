@@ -1,9 +1,10 @@
-from json_parser import json_parser, latex_dollar_to_pars
+from json_parser import json_parser, latex_dollar_to_pars, eszett_to_ss
 from bs4 import BeautifulSoup
 import base64
 
 qp = json_parser()
 qp.attach_text_processor(latex_dollar_to_pars)
+qp.attach_text_processor(eszett_to_ss)
 
 # Extract <img> elements ...
 def process_img(img):

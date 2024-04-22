@@ -1,4 +1,4 @@
-from json_parser import json_parser, html_to_bbcode, latex_to_bbcode
+from json_parser import json_parser, html_to_bbcode, latex_to_bbcode, eszett_to_ss
 import csv
 
 # See https://www.classmarker.com/docs/importquestions/classmarker-multiple-choice-question-type-instructions.pdf
@@ -25,5 +25,6 @@ def write_csv(filename, questions, pool):
 qp = json_parser()
 qp.attach_text_processor(html_to_bbcode)
 qp.attach_text_processor(latex_to_bbcode)
+qp.attach_text_processor(eszett_to_ss)
 write_csv('classmarker_export_hb3_{:03d}.csv', qp.novice_questions(), 'BNetzA Klasse E')
 write_csv('classmarker_export_hb9_{:03d}.csv', qp.cept_questions(), 'BNetzA Klasse A')
