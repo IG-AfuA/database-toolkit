@@ -29,7 +29,10 @@ Converter for ClassMarker
 `convert_to_classmarker.py` is used to produce a collection of questions for
 import into [ClassMarker](https://www.classmarker.com/). Note that you have to
 set `BASE_URL` in `json_parser.py` to point to some web server that delivers
-the images via https.
+the images via https. During a quiz, questions are provided by classmarker
+and images are retrieved from that web server. This was done for simplicity
+since we avoid to import images into classmarker this way (we use the
+`[img]URL[/img]` BB-code to do that).
 
 Thus, the base URL needs to start with `https://` and have a trailing slash,
 e.g. `https://classmarker.example.com/static/`. In this case, the following
@@ -41,6 +44,20 @@ https://classmarker.example.com/static/lichtblicke/
 ```
 
 You can pull these files from `afu-group-trainer/frontend/static/`
+
+To insert 'Lichtblicke' into the 'incorrect feedback' field or to add a
+link to the question text, use the flags `-lf` and `-lq`, respectively:
+
+```
+usage: convert_to_classmarker.py [-h] [-lq] [-lf]
+
+options:
+  -h, --help            show this help message and exit
+  -lq, --lichtblicke-in-questions
+                        Add links to Lichtblicke at the beginning of question
+  -lf, --lichtblicke-in-feedback
+                        Add links to Lichtblicke for incorrect feedback
+```
 
 
 Rescaling Images
