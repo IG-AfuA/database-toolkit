@@ -119,7 +119,7 @@ class json_parser:
         root = question_pool['children']
         self.novice_tree = root[0]
         self.cept_tree = root[1]
-        self.text_processors = []
+        self.text_processors = [eszett_to_ss, ] # Convert ß to ss by default
 
     def attach_text_processor(self, p):
         self.text_processors.append(p)
@@ -142,11 +142,11 @@ class json_parser:
         if len(category_id) <= 1 or category_id[1] == '.':
             category_id = '0'+category_id
         if len(node['children']) == 0:
-            new_category = exam_category(category_id = category_id, category_name = node['name'], parent = category)
+            new_category = exam_category(category_id = category_id, category_name = eszett_to_ss(node['name']), parent = category)
             self._extract_questions(node['questions'], new_category, questions)
         else:
             assert len(node['questions']) == 0
-            new_category = exam_category(category_id = category_id, category_name = node['name'], parent = category)
+            new_category = exam_category(category_id = category_id, category_name = eszett_to_ss(node['name']), parent = category)
             for child in node['children']:
                 self._parse_tree(child, new_category, questions)
 

@@ -1,4 +1,4 @@
-from json_parser import json_parser, html_to_bbcode, latex_to_utf8, latex_to_bbcode, eszett_to_ss, BASE_URL
+from json_parser import json_parser, html_to_bbcode, latex_to_utf8, latex_to_bbcode, BASE_URL
 import argparse
 import csv
 
@@ -49,6 +49,5 @@ qp = json_parser()
 qp.attach_text_processor(html_to_bbcode)
 qp.attach_text_processor(latex_to_utf8)
 qp.attach_text_processor(latex_to_bbcode)
-qp.attach_text_processor(eszett_to_ss)
 write_csv('classmarker_export_E_{:02d}.csv', qp.novice_questions(), 'E', args.lichtblicke_in_questions, args.lichtblicke_in_feedback)
 write_csv('classmarker_export_A_{:02d}.csv', qp.cept_questions(), 'A', args.lichtblicke_in_questions, args.lichtblicke_in_feedback)
