@@ -67,6 +67,92 @@ somewhat tedious in particular for the A pool, but unfortunately this
 limitation is by Classmarker. One may consider using the API to import
 questions after ensuring that there is no access limit.
 
+Classmarker expects you to create the parent- and subcategories before importing
+the questions. This is another tedious task that can be automated, though. By
+default, the category structure is:
+```
+
+├─ D01.1
+│  ├─ Klasse E
+│  ├─ Klasse A
+├─ D01.2
+│  ├─ Klasse E
+│  ├─ Klasse A
+├─ ...
+```
+
+We suggest the following process to automatically create those categories:
+1. First we extract the categories into a file `categories.txt`:
+```
+$ python3 dump_categories.py > classmarker_categories/categories.txt
+```
+
+2. Download `ClassMarkerApiClient.php` from the [github classmarker repo](https://github.com/classmarker/api-client/tree/master)
+and store it in the `classmarker_categories` subfolder.
+
+3. Generate an API key by following the instructions [here](https://www.classmarker.com/online-testing/docs/api/#authentication)
+   (section 'Generate an API key', pick a suitable name and keep the default settings.)
+
+4. Enter your API key and secret in `classmarker_categories/config.inc`
+
+5. Run `import_categories.php` which will iterate through your `categories.txt`
+   and create the categories and corresponding subcategories 'Klasse E' and
+   Klasse A'. You can use `tee` to log the process in case something goes wrong.
+```
+$ cd classmarker_categories
+$ php import_categories.php | tee import.log
+[...]
+$
+```
+
+Then you can import the CSV files created by `convert_to_classmarker.py`. Since
+the category names created in this way are not very descriptive, they should be
+renamed to something more verbose after the import is completed. We also offer
+a process for this:
+
+1. Run `get_categories.php` (still from within the `classmarker_categories`
+   subdirectory to create a JSON file of your current category structure:
+```
+$ php get_categories.php > ../all_categories.json
+```
+
+2. Run `categories_json_to_xls.py` from within the main directory (i.e. not from
+   within the `classmarker_categories` subfolder. This will generate a spreadsheet
+   with the following columns:
+   - `PK`: The classmarker category ID for a given category. Never change this number.
+   - `Name E`: Name of the category in the E-pool TOC.
+   - `Name A`: Name of the category in the A-pool TOC.
+   - `Name neu`: Name that will be used for the import. This is the one you need to modify.
+
+   The default for `Name neu` is the category name from the E-pool if it
+   exists, otherwise we use the category name from the A-pool (we found the
+   former to be a bit more descriptive but they are for the very most part
+   equivalent). Classmarker imposes a limit of 30 characters for these
+   names, so you will have to shorten the entries and use abbreviations.
+
+3. Create a file `classmarker_categories/Classmarker_Kategorien_rename.txt` that has the
+   `PK`, followed by a space character followed by the new name for the category (up to
+   30 characters). For example:
+```
+55 D01.1: Math. Grundkenntnisse
+59 D01.2: Grössen und Einheiten
+44 D10.1: Messinstrumente
+45 D10.2: Messungen I
+46 D10.3: Oszilloskop
+47 D10.4: Stehwellenmessgerät
+48 D10.5: Frequenzzähler
+49 D10.6: Absorptionsfreq.messer
+...
+```
+
+4. Run `rename_categories.php` from within the `classmarker_categories` folder.
+   This will rename each category according to
+   `Classmarker_Kategorien_rename.txt`. Note that this program has no mercy, thus
+   it is critical to ensure that the input file is correct. Do not simply copy the
+   example mentioned above as the numbers at the beginning of each line will not
+   correspond to your categories. In consequence, the script will rename the wrong
+   gategories and you will have to clean up a great mess.
+
 
 Rescaling Images
 ================
