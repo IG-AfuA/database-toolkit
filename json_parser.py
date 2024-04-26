@@ -136,13 +136,17 @@ class json_parser:
 
 
     def _parse_tree(self, node, category, questions):
+        # Strip the first two chars from the category_id ('1.') and prefix
+        # with '0' if id is single-digit (for easy ordering).
+        category_id = node['id'][2:]
+        if len(category_id) <= 1 or category_id[1] == '.':
+            category_id = '0'+category_id
         if len(node['children']) == 0:
-            # Strip the first two chards from the category_id ('1.')
-            new_category = exam_category(category_id = node['id'][2:], category_name = node['name'], parent = category)
+            new_category = exam_category(category_id = category_id, category_name = node['name'], parent = category)
             self._extract_questions(node['questions'], new_category, questions)
         else:
             assert len(node['questions']) == 0
-            new_category = exam_category(category_id = node['id'][2:], category_name = node['name'], parent = category)
+            new_category = exam_category(category_id = category_id, category_name = node['name'], parent = category)
             for child in node['children']:
                 self._parse_tree(child, new_category, questions)
 
