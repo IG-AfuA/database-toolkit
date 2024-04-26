@@ -31,6 +31,18 @@ import into [ClassMarker](https://www.classmarker.com/). Note that you have to
 set `BASE_URL` in `json_parser.py` to point to some web server that delivers
 the images via https.
 
+Thus, the base URL needs to start with `https://` and have a trailing slash,
+e.g. `https://classmarker.example.com/static/`. In this case, the following
+paths are expected to exist, containing the images and 'Lichtblicke',
+respectively:
+```
+https://classmarker.example.com/static/img/
+https://classmarker.example.com/static/lichtblicke/
+```
+
+You can pull these files from `afu-group-trainer/frontend/static/`
+
+
 Rescaling Images
 ================
 

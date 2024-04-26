@@ -7,7 +7,19 @@ import re
 # - Translate $>>$ and $<<$
 # - Translate < and >
 
-BASE_URL = '...'
+# In case your export file will contain links to images or 'Lichtblicke', you
+# have to specity a base URL here. This would be needed for, e.g., the classmarker
+# export where images are pulled from an external web page. The base URL needs to
+# start with 'https://' and have a trailing slash, e.g.
+# 'https://classmarker.example.com/static/'. In this case, the following paths
+# are expected to exist, containing the images and 'Lichtblicke', respectively:
+# https://classmarker.example.com/static/img/
+# https://classmarker.example.com/static/lichtblicke/
+# You can pull these files from ./afu-group-trainer/frontend/static/
+
+BASE_URL = 'https://classmarker.example.com/static/'
+assert(BASE_URL.startswith('https://'))
+assert(BASE_URL.endswith('/'))
 
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
@@ -16,7 +28,7 @@ def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
     html_str = re.sub(r'<strong>(.*?)</strong>', r'[b]\1[/b]', html_str)
     html_str = re.sub(r'<code>(.*?)</code>', r'[color=#ff1493]\1[/color]', html_str)
-    html_str = re.sub(r'<img src="(.*?)">', '[img]'+BASE_URL+r'\1[/img]', html_str)
+    html_str = re.sub(r'<img src="(.*?)">', '[img]'+BASE_URL+r'img/\1[/img]', html_str)
 
     return html_str
 
