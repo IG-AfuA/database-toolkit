@@ -59,6 +59,14 @@ options:
                         Add links to Lichtblicke for incorrect feedback
 ```
 
+The converter will produce two sets of output files, `classmarker_export_E_##.csv`
+and `classmarker_export_A_##.csv`, one set for each pool. Classmarker expects
+you to import questions in batches of 50, thus each of these files contains
+50 questions and `##` is an integer for the batch number. Importing all this is
+somewhat tedious in particular for the A pool, but unfortunately this
+limitation is by Classmarker. One may consider using the API to import
+questions after ensuring that there is no access limit.
+
 
 Rescaling Images
 ================
