@@ -110,6 +110,9 @@ def extract_image(text: str):
     else:
         return re.sub(image_tag, '', text), image_tags[0]
 
+def prefix_static_image_path(text: str):
+    return re.sub(r'<img src="(.*?)">', r'<img src="/static/img/\1">', text)
+
 class json_parser:
     def __init__(self):
         fh = open('afu-group-trainer/backend/assets/Fragenkatalog.json')
