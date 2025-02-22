@@ -149,7 +149,7 @@ def extract_image(text: str):
     image_tags = re.findall(image_tag, text)
     assert(len(image_tags) < 2)
     if len(image_tags) == 0:
-        return text, ''
+        return text, None
     else:
         return re.sub(image_tag, '', text), image_tags[0]
 
