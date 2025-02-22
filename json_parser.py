@@ -56,6 +56,39 @@ def latex_to_utf8(text: str):
 
     return re.sub(r'\$(.*?)\$', _latex_to_utf8, text)
 
+def latex_to_utf8_subsuperscript(text: str):
+    def _latex_to_utf8_subsuperscript(match:re.Match):
+        def _latex_to_utf8_superscript(match:re.Match):
+            text = match.group(1)
+            superscript_map = {
+                '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+                'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
+                'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
+                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻'
+            }
+            return ''.join([superscript_map[i] for i in text])
+
+        def _latex_to_utf8_subscript(match:re.Match):
+            text = match.group(1)
+            print(text)
+            subscript_map = {
+
+            }
+            return ''.join([subscript_map[i] for i in text])
+
+        text = match.group(0)
+        text = re.sub(r'\^{([^{}]+)}', _latex_to_utf8_superscript, text)
+        text = re.sub(r'\^(.)', _latex_to_utf8_superscript, text)
+#       text = re.sub(r'\_{(.+)}', _latex_to_utf8_subscript, text)
+
+        if '\\' not in text and '_' not in text and '^' not in text:
+            # String is latex-free now, so we can strip the dollars
+            return text[1:-1]
+        else:
+            return text
+
+    return re.sub(r'\$(.*?)\$', _latex_to_utf8_subsuperscript, text)
+
 def latex_to_bbcode(text: str):
 
     def _latex_to_bbcode(match:re.Match):
