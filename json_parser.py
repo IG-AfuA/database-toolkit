@@ -145,7 +145,7 @@ def print_latex(text: str):
     return(text)
 
 def extract_image(text: str):
-    image_tag = r'<img src="[^"]*">'
+    image_tag = r'<img src="([^"]*)">'
     image_tags = re.findall(image_tag, text)
     assert(len(image_tags) < 2)
     if len(image_tags) == 0:
