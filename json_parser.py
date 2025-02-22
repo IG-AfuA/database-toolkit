@@ -126,6 +126,16 @@ def latex_to_bbcode(text: str):
 def latex_dollar_to_pars(latex_str: str):
     return re.sub(r'\$(.*?)\$', r'\\(\1\\)', latex_str)
 
+# Used to surround TeX equations with '<span class="math-tex">'
+# tags, necessary in card2brain exports.
+def to_card2brain(text:str):
+    #text = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', text)
+    def _latex_to_card2brainmath(match:re.Match):
+        text = match.group(0)[1:-1] # Strip dollars
+        return '<span class="math-tex">\(' + text + '\)</span>'
+
+    return re.sub(r'\$(.*?)\$', _latex_to_card2brainmath, text)
+
 # This can be used for debugging
 def print_latex(text: str):
     inline_latex = r'\$(.*?)\$'
