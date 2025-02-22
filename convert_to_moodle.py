@@ -1,6 +1,7 @@
 from json_parser import json_parser, latex_dollar_to_pars
 from bs4 import BeautifulSoup
 import base64
+import sys
 
 qp = json_parser()
 qp.attach_text_processor(latex_dollar_to_pars)
@@ -54,5 +55,8 @@ def export(questions, pool):
         </question>
         \n''')
     fh.write('</quiz>\n')
-export(qp.novice_questions(), 'HB3')
-export(qp.cept_questions(), 'HB9')
+
+if '-n' in sys.argv:
+    export(qp.novice_questions(), 'HB3')
+if '-c' in sys.argv:
+    export(qp.cept_questions(), 'HB9')
