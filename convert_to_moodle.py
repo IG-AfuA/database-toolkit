@@ -3,8 +3,15 @@ from bs4 import BeautifulSoup
 import base64
 import sys
 
+# Usage: python3 cnovert_to_moodle.py [-n] [-c] [-l]
+# -n: Export novice pool
+# -c: Export CEPT pool
+# -l: Embed "Lichtblicke"
+
 qp = json_parser()
 qp.attach_text_processor(latex_dollar_to_pars)
+
+lichtblicke = '-l' in sys.argv
 
 # Extract <img> elements ...
 def process_img(img):
@@ -33,6 +40,24 @@ def export(questions, pool):
             fh.write(f'    <question type="category"><category><text>{category_path}</text></category></question>\n')
             old_category_path = category_path
 
+        if lichtblicke:
+            if pool == 'HB3':
+                lichtblick_folder = 'E'
+            elif pool == 'HB9':
+                lichtblick_folder = 'A'
+            else:
+                assert True
+
+            with open(f'afu-group-trainer/frontend/static/lichtblicke/{lichtblick_folder}/{q.question_id}.pdf.jpg', 'rb') as img_file:
+                img64 = base64.b64encode(img_file.read()).decode('utf-8')
+                lichtblick_64 = f'data:image/jpeg;base64, {img64}'
+            lichtblick_str = f'''
+            <incorrectfeedback format="html">
+              <text><![CDATA[<img src="{lichtblick_64}">]]></text>
+            </incorrectfeedback>'''
+        else:
+            lichtblick_str = ''
+
         question_text = process_img(q.question_text)
         answer_0 = process_img(q.answer_0)
         answer_1 = process_img(q.answer_1)
@@ -45,6 +70,7 @@ def export(questions, pool):
             <questiontext format="html">
                 <text><![CDATA[{question_text}]]></text>
             </questiontext>
+            {lichtblick_str}
             <answer fraction="100"><text><![CDATA[{answer_0}]]></text></answer>
             <answer fraction="0"  ><text><![CDATA[{answer_1}]]></text></answer>
             <answer fraction="0"  ><text><![CDATA[{answer_2}]]></text></answer>
