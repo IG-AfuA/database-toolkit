@@ -1,6 +1,9 @@
+# Mat says:
 # This code needs major cleanup before it can be merged
 
-from json_parser import json_parser, latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image
+from json_parser import json_parser as json_parser2007, latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image
+from json_parser_DLEDLA2024 import json_parser as json_parser2024
+
 import img_tk
 import xlsxwriter
 import shutil
@@ -9,8 +12,36 @@ import random
 import itertools
 import math
 
+# values of QUESTION_POOL
+DLE2006 = 0
+DLA2007 = 1
+DLE2024 = 2
+DLA2024 = 3
+
+# DECIDE BEFORE RUNNING THE TOOL:
+QUESTION_POOL = DLE2006
+# QUESTION_POOL = DLA2007
+# QUESTION_POOL = DLE2024
+# QUESTION_POOL = DLA2024
+
+# CHECK BEFORE RUNNING THE TOOL:
+# These pathes must exist in ur project folder:
+# 1)
 IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
-LABELS = ('♠','♥','♦','♣')
+#
+# 2) box/media/images/   #FIXME
+#    (the output for Card2Brain)
+#
+# 3) library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+#    (needed by img_tk.py)
+
+# CHECK ALSO:
+# the pyton file json-parser.py respectively json-parser_DLEDLA2024.py
+# for value settings before running the tool.
+
+# NOW YOU ARE READY
+
+LABELS = ('Œ','Ø','][','@')
 
 ANSWERS_PER_QUESTION = 4
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
@@ -35,9 +66,9 @@ def export(questions, pool):
 #       if q.question_id != 'TH405': continue
 #       if q.question_id != 'TC505': continue
 
-        # Card2Brain only allows plain-text answers. Thus we have to implement
+        # Card2Brain only allows plain-text answers. Thus, we have to implement
         # a quirk when answers contain math or images. In this case, answers
-        # are integrated in to the questsion and prefixed with "A" to "D". This
+        # are integrated in to the question and prefixed with "A" to "D". This
         # looks weird when Card2Brain shuffles answers since "A" to "D" appears
         # in a strange order. We therefore only want to do that if necessary.
 
@@ -83,11 +114,24 @@ def export(questions, pool):
         else:
             worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,'','','','','',solution[0],answers[0],solution[1],answers[1],solution[2],answers[2],solution[3],answers[3],'','','','','',''])
 
-qp = json_parser()
-qp.attach_text_processor(latex_to_utf8)
-qp.attach_text_processor(latex_to_utf8_subsuperscript)
-qp.attach_text_processor(to_card2brain)
-export(qp.novice_questions(), 'HB3')
-#export(qp.cept_questions(), 'HB9')
+if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
+    qp = json_parser2007()
+    qp.attach_text_processor(latex_to_utf8)
+    qp.attach_text_processor(latex_to_utf8_subsuperscript)
+    qp.attach_text_processor(to_card2brain)
+    if QUESTION_POOL == DLE2006:
+        export(qp.novice_questions(), 'HB3')
+    else:
+        export(qp.cept_questions(), 'HB9')
+
+elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
+    qp = json_parser2024()
+    #FIXME
+
+else:
+    print("---------------------------------------")
+    print("Wrong value in QUESTION_POOL")
+    print("See top of file 'convert_to_card2brain.py")
+    print("---------------------------------------")
 
 workbook.close()
