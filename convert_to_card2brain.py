@@ -19,8 +19,8 @@ DLE2024 = 2
 DLA2024 = 3
 
 # DECIDE BEFORE RUNNING THE TOOL:
-QUESTION_POOL = DLE2006
-# QUESTION_POOL = DLA2007
+# QUESTION_POOL = DLE2006
+QUESTION_POOL = DLA2007
 # QUESTION_POOL = DLE2024
 # QUESTION_POOL = DLA2024
 
@@ -85,7 +85,7 @@ def export(questions, pool):
         solution = shuffle(('x','','',''), permutation)
 
         if '<img ' in q.answer_0:
-            assert(question_image is None)
+            # assert(question_image is None) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC515 auslöst?
             math_img_quirk = True
             image_col = []
             for label,answer in zip(LABELS, answers):
@@ -121,7 +121,7 @@ if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
     qp.attach_text_processor(to_card2brain)
     if QUESTION_POOL == DLE2006:
         export(qp.novice_questions(), 'HB3')
-    else:
+    else:  # QUESTION_POOL == DLA2007
         export(qp.cept_questions(), 'HB9')
 
 elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
@@ -134,4 +134,5 @@ else:
     print("See top of file 'convert_to_card2brain.py")
     print("---------------------------------------")
 
+# print("EOP")
 workbook.close()

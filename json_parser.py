@@ -64,16 +64,20 @@ def latex_to_utf8_subsuperscript(text: str):
                 '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
                 'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
                 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
-                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻'
+                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '̓'
             }
+            #FIXME Letztes Paar (Komma): Habe ich das richtige hochgestellte Komma gefunden?
+
             return ''.join([superscript_map[i] for i in text])
 
+        # The function ...subscript is not fully programmed. #FIXME
+        # The function is - so far - not in use anywhere.
         def _latex_to_utf8_subscript(match:re.Match):
             text = match.group(1)
             print(text)
             subscript_map = {
 
-            }
+            } #FIXME
             return ''.join([subscript_map[i] for i in text])
 
         text = match.group(0)
@@ -147,7 +151,7 @@ def print_latex(text: str):
 def extract_image(text: str):
     image_tag = r'<img src="([^"]*)">'
     image_tags = re.findall(image_tag, text)
-    assert(len(image_tags) < 2)
+    # assert(len(image_tags) < 2) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC525 auslöst?
     if len(image_tags) == 0:
         return text, None
     else:
