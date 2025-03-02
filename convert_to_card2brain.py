@@ -29,11 +29,32 @@ QUESTION_POOL = DLA2007
 # 1)
 IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
 #
-# 2) box/media/images/   #FIXME
-#    (the output for Card2Brain)
-#
-# 3) library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+# 3) Path and ttf-font:
+#    library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
 #    (needed by img_tk.py)
+#
+# 3)
+# For the output files (xlsx-File + images), which can be imported to Card2Brain-App:
+# a) folder: output-files\DLE2006\media\images
+# b) folder: output-files\DLA2007\media\images
+# c) folder: output-files\DLE2024\media\images
+# d) folder: output-files\DLA2024\media\images
+OUTPUT_FILE_PATH = 'output-files/'
+if QUESTION_POOL == DLE2006:
+    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2006/'
+elif QUESTION_POOL == DLA2007:
+    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLA2007/'
+elif QUESTION_POOL == DLE2024:
+    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2024/'
+elif QUESTION_POOL == DLA2024:
+    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2024/'
+else:
+    print("---------------------------------------")
+    print("Wrong value in QUESTION_POOL")
+    print("See top of file 'convert_to_card2brain.py")
+    print("---------------------------------------")
+OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/' # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
+OUTPUT_XLXS_FILE_NAME = "xlxs-for-c2b-import.xlsx"
 
 # CHECK ALSO:
 # the pyton file json-parser.py respectively json-parser_DLEDLA2024.py
@@ -46,7 +67,7 @@ LABELS = ('Œ','Ø','][','@')
 ANSWERS_PER_QUESTION = 4
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
-workbook = xlsxwriter.Workbook('box/box.xlsx')
+workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLXS_FILE_NAME)
 worksheet = workbook.add_worksheet('Fragen')
 image_tag = r'<img src="([^"]*)">'
 
@@ -76,7 +97,7 @@ def export(questions, pool):
         question_text, question_image = extract_image(q.question_text)
         if question_image is not None:
             new_question_image = re.sub(r'/', '_', question_image)
-            shutil.copyfile(IMG_BASE_PATH+question_image, 'box/media/images/'+new_question_image)
+            shutil.copyfile(IMG_BASE_PATH + question_image, OUTPUT_IMG_PATH + new_question_image)
         else:
             new_question_image = ''
 
@@ -103,7 +124,7 @@ def export(questions, pool):
             answer_image = img_tk.tile_images_vertically(image_col)
             new_question_image = f'{pool}_{q.question_id}_a_stacked.png'
             print(new_question_image)
-            answer_image.save(f'box/media/images/{new_question_image}')
+            answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
         elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
             math_img_quirk = True
             question_text += '<br><br>'
