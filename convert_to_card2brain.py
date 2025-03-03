@@ -11,6 +11,7 @@ import re
 import random
 import itertools
 import math
+import os
 
 # values of QUESTION_POOL
 DLE2006 = 0
@@ -29,23 +30,20 @@ QUESTION_POOL = DLA2007
 # 1)
 IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
 #
-# 3) Path and ttf-font:
-#    library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+# 2) Path and ttf-font:
+#    library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
 #    (needed by img_tk.py)
-#
-# 3)
-# For the output files (xlsx-File + images), which can be imported to Card2Brain-App:
-# You need either the folder
-# -- output-files\Card2Brain\media\images
-# or the following 4 folders:
-# -- output-files\Card2Brain_DLE2006\media\images
-# -- output-files\Card2Brain_DLA2007\media\images
-# -- output-files\Card2Brain_DLE2024\media\images
-# -- output-files\Card2Brain_DLA2024\media\images
-#
-OUTPUT_FILE_PATH = 'output-files/'
-SEPARATED_FOLDERS = True   # Separated folders for DLE2006, DLA2007, ... ?
 
+
+# The name of the folder for the output data can be
+# chosen freely. It is created in the project folder.
+OUTPUT_FILE_PATH = 'output-files/'
+
+# Decide whether you want to create a separate subfolder
+# for each question pool (DLE2006, DLA2007, ...)
+SEPARATED_FOLDERS = True
+
+# Now the required subfolders will be determined
 if not SEPARATED_FOLDERS:
     OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain/'
 else:
@@ -63,18 +61,27 @@ else:
         print("---------------------------------------")
         assert True
 
-OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/' # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
+# The name of the XLSX-file can be choosen freely.
 OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
 
-# CHECK ALSO:
-# the pyton file json-parser.py respectively json-parser_DLEDLA2024.py
-# for value settings before running the tool.
+# DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
+OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/'
 
-# NOW YOU ARE READY
+# Checking whether the folder path with all the required subfolders
+# already exists. If not, it will be created.
+if not os.path.exists(OUTPUT_IMG_PATH):
+    try:
+        os.makedirs(OUTPUT_IMG_PATH)
+    except OSError as e:
+        print(f"Fehler beim Erstellen des Ordnerpfads: {e}")
 
+# Labels for those answers with pictures.
 LABELS = ('Œ','Ø','][','@')
 
+# Multiple choice test with ... answers per question:
 ANSWERS_PER_QUESTION = 4
+
+# ?
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
 workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
