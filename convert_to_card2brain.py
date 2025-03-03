@@ -35,26 +35,36 @@ IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
 #
 # 3)
 # For the output files (xlsx-File + images), which can be imported to Card2Brain-App:
-# a) folder: output-files\DLE2006\media\images
-# b) folder: output-files\DLA2007\media\images
-# c) folder: output-files\DLE2024\media\images
-# d) folder: output-files\DLA2024\media\images
+# You need either the folder
+# -- output-files\Card2Brain\media\images
+# or the following 4 folders:
+# -- output-files\Card2Brain_DLE2006\media\images
+# -- output-files\Card2Brain_DLA2007\media\images
+# -- output-files\Card2Brain_DLE2024\media\images
+# -- output-files\Card2Brain_DLA2024\media\images
+#
 OUTPUT_FILE_PATH = 'output-files/'
-if QUESTION_POOL == DLE2006:
-    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2006/'
-elif QUESTION_POOL == DLA2007:
-    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLA2007/'
-elif QUESTION_POOL == DLE2024:
-    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2024/'
-elif QUESTION_POOL == DLA2024:
-    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'DLE2024/'
+SEPARATED_FOLDERS = True   # Separated folders for DLE2006, DLA2007, ... ?
+
+if not SEPARATED_FOLDERS:
+    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain/'
 else:
-    print("---------------------------------------")
-    print("Wrong value in QUESTION_POOL")
-    print("See top of file 'convert_to_card2brain.py")
-    print("---------------------------------------")
+    if QUESTION_POOL == DLE2006:
+        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2006/'
+    elif QUESTION_POOL == DLA2007:
+        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLA2007/'
+    elif QUESTION_POOL == DLE2024:
+        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
+    elif QUESTION_POOL == DLA2024:
+        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
+    else:
+        print("---------------------------------------")
+        print("Wrong value in QUESTION_POOL")
+        print("---------------------------------------")
+        assert True
+
 OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/' # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
-OUTPUT_XLXS_FILE_NAME = "xlxs-for-c2b-import.xlsx"
+OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
 
 # CHECK ALSO:
 # the pyton file json-parser.py respectively json-parser_DLEDLA2024.py
@@ -67,7 +77,7 @@ LABELS = ('Œ','Ø','][','@')
 ANSWERS_PER_QUESTION = 4
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
-workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLXS_FILE_NAME)
+workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
 worksheet = workbook.add_worksheet('Fragen')
 image_tag = r'<img src="([^"]*)">'
 
@@ -75,6 +85,7 @@ title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung 
 
 title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
+
 
 def shuffle(items, permutation):
     return tuple(items[p] for p in PERMUTATIONS[permutation])
@@ -150,10 +161,7 @@ elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
     #FIXME
 
 else:
-    print("---------------------------------------")
-    print("Wrong value in QUESTION_POOL")
-    print("See top of file 'convert_to_card2brain.py")
-    print("---------------------------------------")
+    assert True
 
 # print("EOP")
 workbook.close()
