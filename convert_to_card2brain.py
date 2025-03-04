@@ -48,12 +48,16 @@ if not SEPARATED_FOLDERS:
     OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain/'
 else:
     if QUESTION_POOL == DLE2006:
+        QUESTION_POOL_NAME = 'DLE-2006'
         OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2006/'
     elif QUESTION_POOL == DLA2007:
+        QUESTION_POOL_NAME = 'DLA-2007'
         OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLA2007/'
     elif QUESTION_POOL == DLE2024:
+        QUESTION_POOL_NAME = 'DLE-2024'
         OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
     elif QUESTION_POOL == DLA2024:
+        QUESTION_POOL_NAME = 'DLA-2024'
         OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
     else:
         print("---------------------------------------")
@@ -75,7 +79,7 @@ if not os.path.exists(OUTPUT_IMG_PATH):
     except OSError as e:
         print(f"Fehler beim Erstellen des Ordnerpfads: {e}")
 
-# Labels for those answers with pictures.
+# Labels for those answers with pictures or math formulas:
 LABELS = ('Œ','Ø','][','@')
 
 # Multiple choice test with ... answers per question:
@@ -141,17 +145,22 @@ def export(questions, pool):
 
             answer_image = img_tk.tile_images_vertically(image_col)
             new_question_image = f'{pool}_{q.question_id}_a_stacked.png'
-            print(new_question_image)
+            #print(new_question_image)
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
         elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
             math_img_quirk = True
             question_text += '<br><br>'
             for a1, a2 in zip(LABELS, answers):
                 question_text += f'<strong>{a1}:</strong> {a2}<br>'
+
+        # for field 'Ergänzung Antwort' in the XLSX file:
+        var_source_info = '(Frage-ID: ' + QUESTION_POOL_NAME + '-' + q.question_id + ')'
+
+        # writing a row in the xlsx-file:
         if math_img_quirk:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,'','','','','',solution[0],LABELS[0],solution[1],LABELS[1],solution[2],LABELS[2],solution[3],LABELS[3],'','','','','',''])
+            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],LABELS[0],solution[1],LABELS[1],solution[2],LABELS[2],solution[3],LABELS[3],'','','','','',''])
         else:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,'','','','','',solution[0],answers[0],solution[1],answers[1],solution[2],answers[2],solution[3],answers[3],'','','','','',''])
+            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],answers[0],solution[1],answers[1],solution[2],answers[2],solution[3],answers[3],'','','','','',''])
 
 if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
     qp = json_parser2007()
@@ -170,5 +179,9 @@ elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
 else:
     assert True
 
-# print("EOP")
 workbook.close()
+
+print('-----------------')
+print('The output data is stored in this path:')
+print('  ' + OUTPUT_FILE_PATH)
+print('-----------------')
