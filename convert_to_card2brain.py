@@ -65,7 +65,7 @@ else:
         print("---------------------------------------")
         assert True
 
-# The name of the XLSX-file can be choosen freely.
+# The name of the Excel file can be chosen freely.
 OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
 
 # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
@@ -126,12 +126,13 @@ def export(questions, pool):
         permutation = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
         answers = shuffle((q.answer_0, q.answer_1, q.answer_2, q.answer_3), permutation)
         solution = shuffle(('x','','',''), permutation)
+        labelmix = shuffle(LABELS, permutation)
 
         if '<img ' in q.answer_0:
             # assert(question_image is None) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC515 auslöst?
             math_img_quirk = True
             image_col = []
-            for label,answer in zip(LABELS, answers):
+            for label,answer in zip(labelmix,answers):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
                 assert(len(image_tags) == 1)
@@ -150,7 +151,7 @@ def export(questions, pool):
         elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
             math_img_quirk = True
             question_text += '<br><br>'
-            for a1, a2 in zip(LABELS, answers):
+            for a1, a2 in zip(labelmix, answers):
                 question_text += f'<strong>{a1}:</strong> {a2}<br>'
 
         # for field 'Ergänzung Antwort' in the XLSX file:
@@ -158,7 +159,7 @@ def export(questions, pool):
 
         # writing a row in the xlsx-file:
         if math_img_quirk:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],LABELS[0],solution[1],LABELS[1],solution[2],LABELS[2],solution[3],LABELS[3],'','','','','',''])
+            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],labelmix[0],solution[1],labelmix[1],solution[2],labelmix[2],solution[3],labelmix[3],'','','','','',''])
         else:
             worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],answers[0],solution[1],answers[1],solution[2],answers[2],solution[3],answers[3],'','','','','',''])
 
