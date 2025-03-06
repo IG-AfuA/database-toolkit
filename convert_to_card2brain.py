@@ -19,14 +19,26 @@ DLA2007 = 1
 DLE2024 = 2
 DLA2024 = 3
 
+# The name of the question pool as String is used for:
+# -- path name
+# -- info in the Excel in the field 'Ergänzung A'
+names_of_question_pools = {
+    DLE2006: 'DLE-2006',
+    DLA2007: 'DLA-2007',
+    DLE2024: 'DLE-2024',
+    DLA2024: 'DLA-2024'
+}
+
 # DECIDE BEFORE RUNNING THE TOOL:
 # QUESTION_POOL = DLE2006
 QUESTION_POOL = DLA2007
 # QUESTION_POOL = DLE2024
 # QUESTION_POOL = DLA2024
 
+QUESTION_POOL_NAME = names_of_question_pools.get(QUESTION_POOL, 'ERROR-POOL-UNKNOWN')
+
 # CHECK BEFORE RUNNING THE TOOL:
-# These pathes must exist in ur project folder:
+# These paths must exist in ur project folder:
 # 1)
 IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
 #
@@ -34,36 +46,9 @@ IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
 #    library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
 #    (needed by img_tk.py)
 
-
 # The name of the folder for the output data can be
 # chosen freely. It is created in the project folder.
-OUTPUT_FILE_PATH = 'output-files/'
-
-# Decide whether you want to create a separate subfolder
-# for each question pool (DLE2006, DLA2007, ...)
-SEPARATED_FOLDERS = True
-
-# Now the required subfolders will be determined
-if not SEPARATED_FOLDERS:
-    OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain/'
-else:
-    if QUESTION_POOL == DLE2006:
-        QUESTION_POOL_NAME = 'DLE-2006'
-        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2006/'
-    elif QUESTION_POOL == DLA2007:
-        QUESTION_POOL_NAME = 'DLA-2007'
-        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLA2007/'
-    elif QUESTION_POOL == DLE2024:
-        QUESTION_POOL_NAME = 'DLE-2024'
-        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
-    elif QUESTION_POOL == DLA2024:
-        QUESTION_POOL_NAME = 'DLA-2024'
-        OUTPUT_FILE_PATH = OUTPUT_FILE_PATH + 'Card2Brain_DLE2024/'
-    else:
-        print("---------------------------------------")
-        print("Wrong value in QUESTION_POOL")
-        print("---------------------------------------")
-        assert True
+OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + QUESTION_POOL_NAME + '/'
 
 # The name of the Excel file can be chosen freely.
 OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
@@ -85,20 +70,29 @@ LABELS = ('Œ','Ø','][','@')
 # Multiple choice test with ... answers per question:
 ANSWERS_PER_QUESTION = 4
 
-# ?
+# Generate a list of all possible tuple combinations:
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
+# Open the Excel file in the output file folder:
 workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+
+# Open a worksheet in the Excel file:
 worksheet = workbook.add_worksheet('Fragen')
-image_tag = r'<img src="([^"]*)">'
 
+# Write row[0], the title row, in the worksheet of the Excel file:
 title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung F','Phonetics F','Beispielsatz F','Audio F','Bild F','Ergänzung A','Phonetics A','Beispielsatz A','Audio A','Bild A','MCA1 Correct','MCA1 Text','MCA2 Correct','MCA2 Text','MCA3 Correct','MCA3 Text','MCA4 Correct','MCA4 Text','MCA5 Correct','MCA5 Text','Copyright Image F','Copyright Image A','Copyright Audio F','Copyright Audio A')
-
 title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
 
+# ?
+image_tag = r'<img src="([^"]*)">'
+
 
 def shuffle(items, permutation):
+    # Set the order in the delivered tuple according to the
+    # order in PERMUTATIONS[permutation].
+    # If this function is repeatedly delivered with different 'items'
+    # but identical 'permutation', the order will be changed identically each time.
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
 
@@ -123,16 +117,22 @@ def export(questions, pool):
         else:
             new_question_image = ''
 
-        permutation = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
-        answers = shuffle((q.answer_0, q.answer_1, q.answer_2, q.answer_3), permutation)
-        solution = shuffle(('x','','',''), permutation)
-        labelmix = shuffle(LABELS, permutation)
+        # Define a randomized order for the answers
+        # and change then the order in an identical manner for answers and solutions:
+        permutation_answers = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
+        answers_new_order = shuffle((q.answer_0, q.answer_1, q.answer_2, q.answer_3), permutation_answers)
+        solutions_new_order = shuffle(('x','','',''), permutation_answers)
+
+        # Change the order for the labels but use a different randomized order
+        # (otherwise allways the same label is the correct answer).
+        permutation_labels = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
+        labels_new_order = shuffle(LABELS, permutation_labels)
 
         if '<img ' in q.answer_0:
             # assert(question_image is None) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC515 auslöst?
             math_img_quirk = True
             image_col = []
-            for label,answer in zip(labelmix,answers):
+            for label,answer in zip(labels_new_order,answers_new_order):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
                 assert(len(image_tags) == 1)
@@ -151,17 +151,17 @@ def export(questions, pool):
         elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
             math_img_quirk = True
             question_text += '<br><br>'
-            for a1, a2 in zip(labelmix, answers):
+            for a1, a2 in zip(labels_new_order, answers_new_order):
                 question_text += f'<strong>{a1}:</strong> {a2}<br>'
 
         # for field 'Ergänzung Antwort' in the XLSX file:
-        var_source_info = '(Frage-ID: ' + QUESTION_POOL_NAME + '-' + q.question_id + ')'
+        info_question_id = '(Frage-ID: ' + QUESTION_POOL_NAME + '-' + q.question_id + ')'
 
         # writing a row in the xlsx-file:
         if math_img_quirk:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],labelmix[0],solution[1],labelmix[1],solution[2],labelmix[2],solution[3],labelmix[3],'','','','','',''])
+            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
         else:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,var_source_info,'','','','',solution[0],answers[0],solution[1],answers[1],solution[2],answers[2],solution[3],answers[3],'','','','','',''])
+            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],answers_new_order[0],solutions_new_order[1],answers_new_order[1],solutions_new_order[2],answers_new_order[2],solutions_new_order[3],answers_new_order[3],'','','','','',''])
 
 if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
     qp = json_parser2007()
