@@ -111,6 +111,12 @@ def export(questions, pool):
 
         math_img_quirk = False
         question_text, question_image = extract_image(q.question_text)
+
+
+        # If an image was embedded in the middle of the question text,
+        # then there was usually a <br> tag before and after it, which now has to be removed:
+        question_text = re.sub(r'<br><br>', ' ', question_text)
+
         if question_image is not None:
             new_question_image = re.sub(r'/', '_', question_image)
             shutil.copyfile(IMG_BASE_PATH + question_image, OUTPUT_IMG_PATH + new_question_image)
