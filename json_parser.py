@@ -170,7 +170,7 @@ def prefix_static_image_path(text: str):
 
 class json_parser:
     def __init__(self):
-        fh = open('afu-group-trainer/backend/assets/Fragenkatalog.json')
+        fh = open('input-files/afu-group-trainer/backend/assets/Fragenkatalog.json')
         question_pool = json.load(fh)
         fh.close()
 

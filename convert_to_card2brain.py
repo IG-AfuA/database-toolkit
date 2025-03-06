@@ -31,8 +31,8 @@ names_of_question_pools = {
 
 # DECIDE BEFORE RUNNING THE TOOL:
 # QUESTION_POOL = DLE2006
-QUESTION_POOL = DLA2007
-# QUESTION_POOL = DLE2024
+# QUESTION_POOL = DLA2007
+QUESTION_POOL = DLE2024
 # QUESTION_POOL = DLA2024
 
 QUESTION_POOL_NAME = names_of_question_pools.get(QUESTION_POOL, 'ERROR-POOL-UNKNOWN')
@@ -40,7 +40,12 @@ QUESTION_POOL_NAME = names_of_question_pools.get(QUESTION_POOL, 'ERROR-POOL-UNKN
 # CHECK BEFORE RUNNING THE TOOL:
 # These paths must exist in ur project folder:
 # 1)
-IMG_BASE_PATH = 'afu-group-trainer/frontend/static/img/'
+if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
+    IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
+elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
+    IMG_BASE_PATH = 'input-files/50ohm-pocket-main/assets/svgs/'
+else:
+    assert True
 #
 # 2) Path and ttf-font:
 #    library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
