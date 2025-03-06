@@ -24,6 +24,12 @@ assert(BASE_URL.endswith('/'))
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
 
+# '≪' and '≫' instead of '<<' and '>>'
+def math_signs_much_less_and_much_greater(text: str):
+    text = re.sub(r'<<','≪', text)
+    text = re.sub(r'>>', '≫', text)
+    return text
+
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
     html_str = re.sub(r'<strong>(.*?)</strong>', r'[b]\1[/b]', html_str)
