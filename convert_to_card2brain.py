@@ -154,9 +154,11 @@ def export(questions, pool):
                 question_text += '<br><br>'
                 question_text += f'<strong>{a1}:</strong> {a2}'
 
-        #FIXME Workaround for bug 'Question string starts with '<br>'
+        #FIXME Workaround for bug 'Question string starts or ends with '<br>'
         if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
             question_text = question_text[4:]
+        if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
+            question_text = question_text[:-4]
 
         # for field 'Ergänzung Antwort' in the XLSX file:
         info_question_id = '(Frage-ID: ' + QUESTION_POOL_NAME + '-' + q.question_id + ')'
