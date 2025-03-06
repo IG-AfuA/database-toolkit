@@ -74,16 +74,18 @@ def latex_to_utf8_subsuperscript(text: str):
         # The function is - so far - not in use anywhere.
         def _latex_to_utf8_subscript(match:re.Match):
             text = match.group(1)
-            print(text)
             subscript_map = {
-
+                '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
             } #FIXME
             return ''.join([subscript_map[i] for i in text])
 
         text = match.group(0)
         text = re.sub(r'\^{([^{}]+)}', _latex_to_utf8_superscript, text)
         text = re.sub(r'\^(.)', _latex_to_utf8_superscript, text)
-#       text = re.sub(r'\_{(.+)}', _latex_to_utf8_subscript, text)
+
+        # Subscript: Only convert numbers:
+        # because subscript numbers are acceptet in Card2Brain answer fields
+        text = re.sub(r'\_(\d)', _latex_to_utf8_subscript, text)
 
         if '\\' not in text and '_' not in text and '^' not in text:
             # String is latex-free now, so we can strip the dollars
