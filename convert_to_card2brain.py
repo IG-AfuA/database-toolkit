@@ -150,9 +150,13 @@ def export(questions, pool):
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
         elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
             math_img_quirk = True
-            question_text += '<br><br>'
             for a1, a2 in zip(labels_new_order, answers_new_order):
-                question_text += f'<strong>{a1}:</strong> {a2}<br>'
+                question_text += '<br><br>'
+                question_text += f'<strong>{a1}:</strong> {a2}'
+
+        #FIXME Workaround for bug 'Question string starts with '<br>'
+        if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
+            question_text = question_text[4:]
 
         # for field 'Ergänzung Antwort' in the XLSX file:
         info_question_id = '(Frage-ID: ' + QUESTION_POOL_NAME + '-' + q.question_id + ')'
