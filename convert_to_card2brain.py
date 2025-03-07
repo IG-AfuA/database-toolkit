@@ -45,6 +45,11 @@ if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
 elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
     IMG_BASE_PATH = 'input-files/50ohm-pocket-main/assets/svgs/'
 else:
+    IMG_BASE_PATH = '*** question pool does not exist ***'
+    print(IMG_BASE_PATH)
+    assert True
+if not os.path.exists(IMG_BASE_PATH):
+    print ('*** path to input files does not exist ***')
     assert True
 #
 # 2) Path and ttf-font:
