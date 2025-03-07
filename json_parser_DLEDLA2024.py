@@ -37,6 +37,25 @@ def print_latex(text: str):
         print(eq)
     return(text)
 
+# Structure of the JSON files
+# - "sections" = [
+#    - "sections" = [
+#       - "questions" = [
+#
+# fields of a single data set:
+# allways:          'number'           consisting of 2 capital letters + 3 digits
+# allways:          'class'            = '3'
+# allways:          'question'         string
+# allways:          'answer_a'         string, if there is an image, then content = "" or NULL
+# allways:          'answer_b'         dito
+# allways:          'answer_c'         dito
+# allways:          'answer_d'         dito
+# if applicable:   'picture_question'  = number + '_q'. This is the name of the image file (without the ending '.svg')
+# if applicable:   'picture_a'         = number + '_a'. dito
+# if applicable:   'picture_b'         = number + '_b'. dito
+# if applicable:   'picture_c'         = number + '_c'. dito
+# if applicable:   'picture_d'         = number + '_d'. dito
+
 class json_parser:
     def __init__(self):
         fh = open('input-files/50ohm-pocket-main/assets/questions/E.json')
