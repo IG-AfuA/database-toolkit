@@ -1,3 +1,4 @@
+# Standard packages:
 from __future__ import annotations # https://stackoverflow.com/questions/62521777/how-to-declare-python-dataclass-member-field-same-as-the-dataclass-type
 import json
 from dataclasses import dataclass
@@ -30,11 +31,15 @@ def math_signs_much_less_and_much_greater(text: str):
     text = re.sub(r'>>', '≫', text)
     return text
 
+#FRAGEPEPE # def standard_replacements ?
+
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
     html_str = re.sub(r'<strong>(.*?)</strong>', r'[b]\1[/b]', html_str)
     html_str = re.sub(r'<code>(.*?)</code>', r'[color=#ff1493]\1[/color]', html_str)
     html_str = re.sub(r'<img src="(.*?)">', '[img]'+BASE_URL+r'img/\1[/img]', html_str)
+
+    # FRAGEPEPE # Wieso wird _hier_im_Parser_ ein Pfad gespeichert?
 
     return html_str
 
@@ -178,6 +183,10 @@ class json_parser:
         self.novice_tree = root[0]
         self.cept_tree = root[1]
         self.text_processors = [eszett_to_ss, ] # Convert ß to ss by default
+        # FRAGEPEPE
+        # a.  eszett hat hier kein Parameter
+        # b,  Was bedeutet ', ]' ?
+        # c.  Wo kann ich text_processor nachlesen?
 
     def attach_text_processor(self, p):
         self.text_processors.append(p)

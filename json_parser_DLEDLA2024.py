@@ -1,6 +1,7 @@
+# Mat says:
 # This code needs major cleanup before it can be merged
 
-
+# Standard packages:
 from __future__ import annotations # https://stackoverflow.com/questions/62521777/how-to-declare-python-dataclass-member-field-same-as-the-dataclass-type
 import json
 from dataclasses import dataclass
@@ -37,14 +38,16 @@ def print_latex(text: str):
         print(eq)
     return(text)
 
-# Structure of the JSON files
+# Structure of the JSON files in
+# input-files/50ohm-pocket-main/assets/questions/
+#
 # - "sections" = [
 #    - "sections" = [
 #       - "questions" = [
 #
 # fields of a single data set:
 # allways:          'number'           consisting of 2 capital letters + 3 digits
-# allways:          'class'            = '3'
+# allways:          'class'            = '1', '2' or '3' (for 'Klasse N', 'E' or 'A')
 # allways:          'question'         string
 # allways:          'answer_a'         string, if there is an image, then content = "" or NULL
 # allways:          'answer_b'         dito
@@ -94,7 +97,9 @@ class json_parser:
 
         if picture_key in question:
             img = question[picture_key]
-            text += f'\n<img src="/static/img_DL24/{img}.svg" alt="{img}">'
+            text += f'<img src="/static/img_DL24/{img}.svg" alt="{img}">'
+
+            # FRAGEPEPE # Wieso wird _hier_im_Parser_ ein Pfad gespeichert?
 
         return text
 
@@ -122,6 +127,8 @@ class json_parser:
                               category = eszett_to_ss(category['title']),
                               subcategory = eszett_to_ss(subcategory['title']))
                     questions.append(q)
+
+
 
     # Consecutively run each processor on text input
     def _process_text(self, text:str):

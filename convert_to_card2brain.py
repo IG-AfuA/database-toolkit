@@ -1,11 +1,7 @@
 # Mat says:
 # This code needs major cleanup before it can be merged
 
-from json_parser import json_parser as json_parser2007, latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image
-from json_parser_DLEDLA2024 import json_parser as json_parser2024
-
-import img_tk
-import xlsxwriter
+# Standard packages:
 import shutil
 import re
 import random
@@ -13,7 +9,21 @@ import itertools
 import math
 import os
 
-# values of QUESTION_POOL
+# Additional packages (have to be installed):
+import xlsxwriter
+
+# Project files:
+from json_parser import json_parser as json_parser2007, latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image
+from json_parser_DLEDLA2024 import json_parser as json_parser2024
+import img_tk # ?
+
+# FRAGEPEPE
+# a1. Zwei parser mit gleichlautenden Funktionen ...
+# a2. Alle '_to_' in eigenes File auslagern?
+#
+# b. Name 'img_tk' sehet für?
+
+# values of QUESTION_POOL # FRAGEPEPE
 DLE2006 = 0
 DLA2007 = 1
 DLE2024 = 2
@@ -41,7 +51,7 @@ QUESTION_POOL_NAME = names_of_question_pools.get(QUESTION_POOL, 'ERROR-POOL-UNKN
 # These paths must exist in ur project folder:
 # 1)
 if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
-    IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
+    IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/' # FRAGEPEPE
 elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
     IMG_BASE_PATH = 'input-files/50ohm-pocket-main/assets/svgs/'
 else:
@@ -94,7 +104,7 @@ title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung 
 title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
 
-# ?
+#  Links to images in the JSON file have this character sequence:
 image_tag = r'<img src="([^"]*)">'
 
 
@@ -108,7 +118,7 @@ def shuffle(items, permutation):
 
 def export(questions, pool):
     for i,q in enumerate(questions):
-#       if q.question_id != 'TA204': continue
+#       if q.question_id != 'TA204': continue #FIXME # FRAGEPEPE
 #       if q.question_id != 'TF505': continue
 #       if q.question_id != 'TH405': continue
 #       if q.question_id != 'TC505': continue
@@ -121,7 +131,6 @@ def export(questions, pool):
 
         math_img_quirk = False
         question_text, question_image = extract_image(q.question_text)
-
 
         # If an image was embedded in the middle of the question text,
         # then there was usually a <br> tag before and after it, which now has to be removed:
@@ -197,8 +206,13 @@ if QUESTION_POOL == DLE2006 or QUESTION_POOL == DLA2007:
 
 elif QUESTION_POOL == DLE2024 or QUESTION_POOL == DLA2024:
     qp = json_parser2024()
-    #FIXME
-
+    qp.attach_text_processor(latex_to_utf8)
+    qp.attach_text_processor(latex_to_utf8_subsuperscript)
+    qp.attach_text_processor(to_card2brain)
+    if QUESTION_POOL == DLE2024: # Klasse E
+        export(qp.novice_questions(), 'HB3')
+    else:  # QUESTION_POOL == DLA2024 # Klasse A
+        export(qp.cept_questions(), 'HB9')
 else:
     assert True
 

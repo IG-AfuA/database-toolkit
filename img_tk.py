@@ -1,3 +1,4 @@
+# Additional packages (have to be installed):
 from PIL import Image, ImageDraw, ImageFont
 
 font_size = 36
