@@ -12,8 +12,8 @@
 
 
 import sys
-#FIXME DEV modus # PEPETEST
-sys.argv.append('-e06')
+#FIXME DEV modus # PEPE
+sys.argv.append('-a07')
 
 # Mat says:
 # This code needs major cleanup before it can be merged.
@@ -110,10 +110,12 @@ def shuffle(items, permutation):
 
 def export(questions, pool):
     for i,q in enumerate(questions):
-#       if q.question_id != 'TA204': continue #FIXME # FRAGEPEPE
-#       if q.question_id != 'TF505': continue
-#       if q.question_id != 'TH405': continue
-#       if q.question_id != 'TC505': continue
+
+        # Test with 4 typical questions:
+        # if q.question_id != 'TA204': continue # question without picture; text answer
+        # if q.question_id != 'TF505': continue # ?
+        # if q.question_id != 'TH405': continue # question with picture; text answer
+        # if q.question_id != 'TC505': continue # pictures as answers
 
         # Card2Brain only allows plain-text answers. Thus, we have to implement
         # a quirk when answers contain math or images. In this case, answers
@@ -194,9 +196,9 @@ def export(questions, pool):
 #
 check_arguments()
 
-if '-e06' in sys.argv or '-e07' in sys.argv:
+if '-e06' in sys.argv or '-a07' in sys.argv:
     IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
-elif 'e24' in sys.argv or '-a24' in sys.argv:
+elif '-e24' in sys.argv or '-a24' in sys.argv:
     IMG_BASE_PATH = 'input-files/50ohm-pocket-main/assets/svgs/'
 else:
     print_separation_line()
@@ -227,7 +229,7 @@ if not os.path.exists(OUTPUT_IMG_PATH):
     try:
         os.makedirs(OUTPUT_IMG_PATH)
     except OSError as e:
-        print(f"Fehler beim Erstellen des Ordnerpfads: {e}")
+        print(f"Error message was generated when creating the folder path: {e}")
 
 # Labels for those answers with pictures or math formulas:
 LABELS = ('Œ','Ø','][','@')
@@ -272,12 +274,14 @@ elif '-e24' in sys.argv or '-a24' in sys.argv:
     else:  # 'a24' in sys.argv
         export(qp.cept_questions(), 'HB9')
 else:
+    print("Error with 'sys.argv' in 'def export'")
     assert True
     exit()
 
 workbook.close()
 
-print('-----------------')
+print_separation_line()
+print('Export completed.')
 print('The output data is stored in this path:')
 print('  ' + OUTPUT_FILE_PATH)
-print('-----------------')
+print_separation_line()
