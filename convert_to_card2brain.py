@@ -259,6 +259,7 @@ if '-e06' in sys.argv or '-a07' in sys.argv:
     qp.attach_text_processor(latex_to_utf8)
     qp.attach_text_processor(latex_to_utf8_subsuperscript)
     qp.attach_text_processor(to_card2brain)
+    qp.attach_text_processor(math_signs_much_less_and_much_greater)
     if '-e06' in sys.argv:
         export(qp.novice_questions(), 'HB3')
     else:  # '-e24' in sys.argv
