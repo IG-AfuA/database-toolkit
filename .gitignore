@@ -1,7 +1,7 @@
 /__pycache__
 /.idea
-/library
-/output-files
+/library/*
+/output-files/*
 /input-files/50ohm-pocket-main
 pepe-notizen.md
 
