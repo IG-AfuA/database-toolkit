@@ -1,3 +1,3 @@
 [submodule "afu-group-trainer"]
-	path = afu-group-trainer
+	path = input-files/afu-group-trainer
 	url = https://github.com/ccoors/afu-group-trainer
