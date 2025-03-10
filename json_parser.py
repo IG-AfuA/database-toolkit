@@ -156,11 +156,16 @@ def print_latex(text: str):
 def extract_image(text: str):
     image_tag = r'<img src="([^"]*)">'
     image_tags = re.findall(image_tag, text)
-    # assert(len(image_tags) < 2) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC525 auslöst?
+    print('Pos. parser 159 : ' + str(image_tags))
+    # assert(len(image_tags) < 2) #FIXME assert löst aus bei DLA07-TC525 (2 Bilder in Frage UND Bilder in Antworten)
     if len(image_tags) == 0:
         return text, None
     else:
-        return re.sub(image_tag, '', text), image_tags[0]
+        # return:
+        # a. Question with removed img tag
+        # b. List auf image file names
+        #FIXME return re.sub(image_tag, '', text), image_tags[0] # re.sub(pattern, repl, string, ...)
+        return re.sub(image_tag, '', text), image_tags  # re.sub(pattern, repl, string, ...)
 
 def prefix_static_image_path(text: str):
     return re.sub(r'<img src="(.*?)">', r'<img src="/static/img/\1">', text)

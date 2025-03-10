@@ -12,8 +12,10 @@
 
 
 import sys
+
 #FIXME DEV modus # PEPE
-sys.argv.append('-a07')
+if len(sys.argv) < 2:
+    sys.argv.append('-a07')
 
 # Mat says:
 # This code needs major cleanup before it can be merged.
@@ -123,18 +125,7 @@ def export(questions, pool):
         # looks weird when Card2Brain shuffles answers since "A" to "D" appears
         # in a strange order. We therefore only want to do that if necessary.
 
-        math_img_quirk = False
-        question_text, question_image = extract_image(q.question_text)
-
-        # If an image was embedded in the middle of the question text,
-        # then there was usually a <br> tag before and after it, which now has to be removed:
-        question_text = re.sub(r'<br><br>', ' ', question_text)
-
-        if question_image is not None:
-            new_question_image = re.sub(r'/', '_', question_image)
-            shutil.copyfile(IMG_BASE_PATH + question_image, OUTPUT_IMG_PATH + new_question_image)
-        else:
-            new_question_image = ''
+        # --- BEGIN export ---
 
         # Define a randomized order for the answers
         # and change then the order in an identical manner for answers and solutions:
@@ -147,14 +138,60 @@ def export(questions, pool):
         permutation_labels = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
         labels_new_order = shuffle(LABELS, permutation_labels)
 
+        math_or_image_in_answer = False # info needed wenn writing a row in Excel sheet
+        count_images = 0    # In case we have more than one image, we have to group them one image.
+        image_col = []      # needed for grouping images
+
+        question_text, question_images = extract_image(q.question_text)
+
+
+        if question_images is not None:
+            # If an image was embedded in the middle of the question text
+            # then there was usually a <br> tag before and after it, which now has to be removed:
+            question_text = re.sub(r'<br><br>', ' ', question_text)
+
+            # If an image was embedded before or after the question text
+            # then there was usually a <br> between image and text,
+            # which now has to be removed:
+            #FIXME Das geht eleganter
+            if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
+                question_text = question_text[4:]
+            if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
+                question_text = question_text[:-4]
+
+        if question_images is None:
+            new_question_image = ''
+
+        elif len(question_images) == 1:
+            count_images += 1
+            new_question_image = re.sub(r'/', '_', question_images[0])
+            # # and now wait if further images will be added from the answers.
+            # Only then decide whether the image should remain unchanged or grouped.
+
+        else: # len(question_images) > 1:
+            count_images += len(question_images)
+            new_question_image = re.sub(r'/', '_', question_images[0])
+            for img_nr in range(len(question_images)):
+                image_col.append(img_tk.load(IMG_BASE_PATH+question_images[img_nr]))
+
+        # ---------------
+
         if '<img ' in q.answer_0:
-            # assert(question_image is None) #FIXME Weshalb dieser Assert, der bei Prüfungsfrage TC515 auslöst?
-            math_img_quirk = True
-            image_col = []
+            # if statement only checks answer_0 because either all four or none of the four
+            # answer options each consist of one image.
+
+            # answer options each consist of one image:
+            math_or_image_in_answer = True
+            count_images += 4
+
+            # Separator between question (text with/without images) and answer options:
+            image_col.append(img_tk.render_text('Vorgeschlagene Antworten:'))
+
+            # grouping all infos to one picture
             for label,answer in zip(labels_new_order,answers_new_order):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
-                assert(len(image_tags) == 1)
+                assert(len(image_tags) == 1) # check if allways one image per answer option
                 match = re.search(image_tag, answer)
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
@@ -165,25 +202,33 @@ def export(questions, pool):
 
             answer_image = img_tk.tile_images_vertically(image_col)
             new_question_image = f'{pool}_{q.question_id}_a_stacked.png'
-            #print(new_question_image)
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
-        elif '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
-            math_img_quirk = True
-            for a1, a2 in zip(labels_new_order, answers_new_order):
-                question_text += '<br><br>'
-                question_text += f'<strong>{a1}:</strong> {a2}'
 
-        #FIXME Workaround for bug 'Question string starts or ends with '<br>'
-        if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
-            question_text = question_text[4:]
-        if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
-            question_text = question_text[:-4]
+        else: # No pictures in answers
 
-        # for field 'Ergänzung Antwort' in the XLSX file:
+            if count_images == 1:
+                new_question_image = re.sub(r'/', '_', question_images[0])
+                shutil.copyfile(IMG_BASE_PATH + question_images[0], OUTPUT_IMG_PATH + new_question_image)
+            elif count_images > 1:
+                answer_image = img_tk.tile_images_vertically(image_col)
+                new_question_image = f'{pool}_{q.question_id}_q_stacked.png'
+                answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
+
+            if '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
+                # The 4 answer variants have no images
+                # but at least one answer option contains math-tex
+                math_or_image_in_answer = True
+                for a1, a2 in zip(labels_new_order, answers_new_order):
+                    question_text += '<br><br>'
+                    question_text += f'<strong>{a1}:</strong> {a2}'
+
+        # End of: if '<img ' in q.answer_0: / else:
+
+        # Text for field 'Ergänzung Antwort' in the XLSX file:
         info_question_id = '(Frage-ID: ' + dict_arguments.get(sys.argv[1]) + '-' + q.question_id + ')'
 
         # writing a row in the xlsx-file:
-        if math_img_quirk:
+        if math_or_image_in_answer:
             worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
         else:
             worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],answers_new_order[0],solutions_new_order[1],answers_new_order[1],solutions_new_order[2],answers_new_order[2],solutions_new_order[3],answers_new_order[3],'','','','','',''])
@@ -252,7 +297,7 @@ title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
 
 #  Links to images in the JSON file have this character sequence:
-image_tag = r'<img src="([^"]*)">'
+image_tag = r'<img src="([^"]*)">' # Regular Expression: https://www.w3schools.com/python/python_regex.asp
 
 if '-e06' in sys.argv or '-a07' in sys.argv:
     qp = json_parser2007()
@@ -276,8 +321,7 @@ elif '-e24' in sys.argv or '-a24' in sys.argv:
         export(qp.cept_questions(), 'HB9')
 else:
     print("Error with 'sys.argv' in 'def export'")
-    assert True
-    exit()
+    assert False
 
 workbook.close()
 
