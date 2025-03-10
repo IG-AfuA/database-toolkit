@@ -9,7 +9,7 @@ import re
 # - Translate < and >
 
 # In case your export file will contain links to images or 'Lichtblicke', you
-# have to specity a base URL here. This would be needed for, e.g., the classmarker
+# have to specify a base URL here. This would be needed for, e.g., the classmarker
 # export where images are pulled from an external web page. The base URL needs to
 # start with 'https://' and have a trailing slash, e.g.
 # 'https://classmarker.example.com/static/'. In this case, the following paths
@@ -69,17 +69,13 @@ def latex_to_utf8_subsuperscript(text: str):
                 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
                 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '̓'
             }
-            #FIXME Letztes Paar (Komma): Habe ich das richtige hochgestellte Komma gefunden?
-
             return ''.join([superscript_map[i] for i in text])
 
-        # The function ...subscript is not fully programmed. #FIXME
-        # The function is - so far - not in use anywhere.
         def _latex_to_utf8_subscript(match:re.Match):
             text = match.group(1)
             subscript_map = {
                 '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
-            } #FIXME
+            }
             return ''.join([subscript_map[i] for i in text])
 
         text = match.group(0)
@@ -87,7 +83,7 @@ def latex_to_utf8_subsuperscript(text: str):
         text = re.sub(r'\^(.)', _latex_to_utf8_superscript, text)
 
         # Subscript: Only convert numbers:
-        # because subscript numbers are acceptet in Card2Brain answer fields
+        # because subscript numbers are accepted in Card2Brain answer fields
         text = re.sub(r'\_(\d)', _latex_to_utf8_subscript, text)
 
         if '\\' not in text and '_' not in text and '^' not in text:
@@ -156,15 +152,12 @@ def print_latex(text: str):
 def extract_image(text: str):
     image_tag = r'<img src="([^"]*)">'
     image_tags = re.findall(image_tag, text)
-    print('Pos. parser 159 : ' + str(image_tags))
-    # assert(len(image_tags) < 2) #FIXME assert löst aus bei DLA07-TC525 (2 Bilder in Frage UND Bilder in Antworten)
     if len(image_tags) == 0:
         return text, None
     else:
         # return:
         # a. Question with removed img tag
         # b. List auf image file names
-        #FIXME return re.sub(image_tag, '', text), image_tags[0] # re.sub(pattern, repl, string, ...)
         return re.sub(image_tag, '', text), image_tags  # re.sub(pattern, repl, string, ...)
 
 def prefix_static_image_path(text: str):
