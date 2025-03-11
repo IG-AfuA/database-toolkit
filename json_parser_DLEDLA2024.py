@@ -13,7 +13,7 @@ import re
 # - Translate < and >
 
 # In case your export file will contain links to images, you
-# have to specity a base URL here. This would be needed for, e.g., the classmarker
+# have to specify a base URL here. This would be needed for, e.g., the classmarker
 # export where images are pulled from an external web page. The base URL needs to
 # start with 'https://' and have a trailing slash, e.g.
 # 'https://classmarker.example.com/static/'. In this case, the following path
@@ -21,7 +21,11 @@ import re
 # https://classmarker.example.com/static/img/
 # You can pull these files from FIXME
 
-BASE_URL = '/static/'
+BASE_URL = 'https://classmarker.example.com/static/'
+
+# Check BASE_URL
+assert(BASE_URL.startswith('https://'))
+assert(BASE_URL.endswith('/'))
 
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
@@ -36,7 +40,8 @@ def print_latex(text: str):
     eqs = re.findall(inline_latex, text)
     for eq in eqs:
         print(eq)
-    return(text)
+    return text
+
 
 # Structure of the JSON files in
 # input-files/50ohm-pocket-main/assets/questions/
@@ -86,7 +91,6 @@ class json_parser:
         self._parse_tree(self.cept_tree, questions)
         return questions
 
-    # FIXME: static
     def _merge_answer_text_image(self, question, answer_key, picture_key):
         text = question[answer_key]
         if text is None:
@@ -96,10 +100,7 @@ class json_parser:
             text = self._process_text(text)
 
         if picture_key in question:
-            img = question[picture_key]
-            text += f'<img src="/static/img_DL24/{img}.svg" alt="{img}">'
-
-            # FRAGEPEPE # Wieso wird _hier_im_Parser_ ein Pfad gespeichert?
+            text += '<img src="' + question[picture_key] +'.png">'
 
         return text
 
@@ -111,7 +112,7 @@ class json_parser:
                     question_text = self._process_text(question['question'])
                     if 'picture_question' in question:
                         img = question['picture_question']
-                        question_text += f'\n<br><img src="/static/img_DL24/{img}.svg" alt="{img}">'
+                        question_text += f'<img src="{img}.png">'
 
                     answer0 = self._merge_answer_text_image(question, 'answer_a', 'picture_a')
                     answer1 = self._merge_answer_text_image(question, 'answer_b', 'picture_b')
@@ -128,7 +129,7 @@ class json_parser:
                               subcategory = eszett_to_ss(subcategory['title']))
                     questions.append(q)
 
-
+                    # print('Pos. Pars2024 l.133: answer0 = ' + str(answer0)) #FIXME PEPE
 
     # Consecutively run each processor on text input
     def _process_text(self, text:str):

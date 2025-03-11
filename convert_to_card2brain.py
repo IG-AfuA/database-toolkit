@@ -15,7 +15,7 @@ import sys
 
 #FIXME DEV modus # PEPE
 if len(sys.argv) < 2:
-    sys.argv.append('-a07')
+    sys.argv.append('-e24')
 
 # Mat says:
 # This code needs major cleanup before it can be merged.
@@ -33,7 +33,7 @@ import os
 import xlsxwriter
 
 # Project files:
-from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image
+from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image, math_signs_much_less_n_much_greater
      #FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
@@ -97,12 +97,6 @@ def check_arguments():
         print_separation_line()
         exit()
 
-# '≪' and '≫' instead of '<<' and '>>'
-def math_signs_much_less_and_much_greater(text: str):
-    text = re.sub(r'<<','≪', text)
-    text = re.sub(r'>>', '≫', text)
-    return text
-
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
     # order in PERMUTATIONS[permutation].
@@ -142,8 +136,11 @@ def export(questions, pool):
         count_images = 0    # In case we have more than one image, we have to group them one image.
         image_col = []      # needed for grouping images
 
+        # print('Pos. C2B 145: q.question_text = ' + q.question_text)  # FIXME PEPE
         question_text, question_images = extract_image(q.question_text)
-
+        # print('Pos. C2B 147: question_text = ' + question_text)  # FIXME PEPE
+        # if question_images is not None:
+        #     print('Pos. C2B 148: question_images = ' + str(question_images))  # FIXME PEPE
 
         if question_images is not None:
             # If an image was embedded in the middle of the question text
@@ -191,8 +188,12 @@ def export(questions, pool):
             for label,answer in zip(labels_new_order,answers_new_order):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
+                # print('Pos. C2B 197: answer = ' + answer) #FIXME PEPE
+                # print('Pos. C2B 198: image_tags = ' + str(image_tags)) #FIXME PEPE
                 assert(len(image_tags) == 1) # check if allways one image per answer option
+                # print('Pos. C2B 200: image_tag = ' + str(image_tag))  # FIXME PEPE
                 match = re.search(image_tag, answer)
+                # print('Pos. C2B 202: match = ' + str(re.search(image_tag, answer)))  # FIXME PEPE
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
                 image_row.append(img_tk.render_text(prefix))
@@ -242,9 +243,11 @@ def export(questions, pool):
 check_arguments()
 
 if '-e06' in sys.argv or '-a07' in sys.argv:
+    img_tk.set_font_size(24)
     IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
 elif '-e24' in sys.argv or '-a24' in sys.argv:
-    IMG_BASE_PATH = 'input-files/50ohm-pocket-main/assets/svgs/'
+    img_tk.set_font_size(36)
+    IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
 else:
     print_separation_line()
     IMG_BASE_PATH = '*** question pool does not exist ***'
@@ -296,21 +299,27 @@ title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung 
 title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
 
-#  Links to images in the JSON file have this character sequence:
-image_tag = r'<img src="([^"]*)">' # Regular Expression: https://www.w3schools.com/python/python_regex.asp
-
 if '-e06' in sys.argv or '-a07' in sys.argv:
+    #  Links of images in the JSON file have this character sequence:
+    image_tag = r'<img src="([^"]*)">' # Regular Expression: https://www.w3schools.com/python/python_regex.asp
+
+    # Parsing
     qp = json_parser2007()
     qp.attach_text_processor(latex_to_utf8)
     qp.attach_text_processor(latex_to_utf8_subsuperscript)
     qp.attach_text_processor(to_card2brain)
-    qp.attach_text_processor(math_signs_much_less_and_much_greater)
+    qp.attach_text_processor(math_signs_much_less_n_much_greater)
     if '-e06' in sys.argv:
         export(qp.novice_questions(), 'HB3')
     else:  # '-e24' in sys.argv
         export(qp.cept_questions(), 'HB9')
 
 elif '-e24' in sys.argv or '-a24' in sys.argv:
+
+    #  Links of images in the JSON file have this character sequence:
+    image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
+
+    # Parsing...
     qp = json_parser2024()
     qp.attach_text_processor(latex_to_utf8)
     qp.attach_text_processor(latex_to_utf8_subsuperscript)

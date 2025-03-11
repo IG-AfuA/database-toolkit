@@ -19,11 +19,19 @@ import re
 # You can pull these files from ./afu-group-trainer/frontend/static/
 
 BASE_URL = 'https://classmarker.example.com/static/'
+
+# Check BASE_URL
 assert(BASE_URL.startswith('https://'))
 assert(BASE_URL.endswith('/'))
 
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
+
+# '≪' and '≫' instead of '<<' and '>>'
+def math_signs_much_less_n_much_greater(text: str):
+    text = re.sub(r'<<','≪', text)
+    text = re.sub(r'>>', '≫', text)
+    return text
 
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
