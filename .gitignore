@@ -1,6 +1,12 @@
 /__pycache__
 /.idea
+
 /input-files/50ohm-pocket-main
+/input-files/50ohm-pocket_images-to-png-converted
+input-files/ZIP_50ohm-pocket_images-to-png-converted.zip
+
 /library/*
+
 /output-files/*
+
 pepe-notizen.md
