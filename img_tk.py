@@ -1,8 +1,18 @@
+# Standard packages:
+# ---
+
 # Additional packages (have to be installed):
 from PIL import Image, ImageDraw, ImageFont
 
-font_size = 24 # 36
+# font path
 font_path = 'library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+
+#inital font size, can be changed with set_font_size(i)
+font_size = 36
+
+def set_font_size(size):
+    global font_size
+    font_size = size
 
 def load(image_path):
     return Image.open(image_path)
