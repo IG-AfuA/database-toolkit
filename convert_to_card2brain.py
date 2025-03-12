@@ -1,4 +1,7 @@
-# Usage: python convert_to_card2brain [-e06] [-a07] [-e24] [-a24]
+# Mat says:
+# This code needs major cleanup before it can be merged.
+
+# Usage: python convert_to_card2brain [-e06] [-a07] [-e24] [-a24] [-beta]
 # For more details, see below in 'def print_arguments()'
 
 # Check for running the tool:
@@ -10,16 +13,6 @@
 # The output files will be placed in a file folder named
 # /output-files/ in your project folder.
 
-
-import sys
-
-#FIXME DEV modus # PEPE
-if len(sys.argv) < 2:
-    sys.argv.append('-e24')
-
-# Mat says:
-# This code needs major cleanup before it can be merged.
-
 # Standard packages:
 import shutil
 import re
@@ -27,7 +20,7 @@ import random
 import itertools
 import math
 import os
-# import sys
+import sys
 
 # Additional packages (have to be installed):
 import xlsxwriter
@@ -38,64 +31,8 @@ from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2bra
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
+import question_pool_tools as pool_tk
 
-# Dictionary of allowed command line arguments
-# Values are needed for:
-# -- part of file path names
-# -- info in the Excel in the field 'Ergänzung A'
-dict_arguments  = {
-    "-e06":"DLE-2006",
-    "-a07":"DLE-2007",
-    "-e24":"DLE-2024",
-    "-a24":"DLA-2024"
-}
-
-def print_arguments():
-    print("Possible command line arguments are:")
-    print("-e06: Export question pool year 2006 for Novice Licence from BNetzA Germany")
-    print("-a07: Export question pool year 2007 for Advanced Licence from BNetzA Germany")
-    print("-e24: Export question pool year 2024 for Novice Licence from BNetzA Germany")
-    print("-a24: Export question pool year 2024 for Advanced Licence from BNetzA Germany")
-
-def print_separation_line():
-    print("--------------------------------")
-
-
-def check_arguments():
-    count_error = 0
-    if len(sys.argv) < 2:
-        # sys.argv[0] contains path and script name
-        # arguments in sys.argv[1] and following
-        print_separation_line()
-        print("Please provide at least one command line argument.")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
-    else:
-        for string_element in sys.argv[1:]:
-            if string_element in list(dict_arguments.keys()): #LIST_OF_ARGUMENTS:
-                pass
-            else:
-                count_error += 1
-                print_separation_line()
-                print("Error: '" + string_element + "' is not a correct command line argument.")
-    if count_error > 0:
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
-
-    # FIXME temporary restriction
-    # source code can so far only handle one argument
-    if len(sys.argv) > 2:
-        print_separation_line()
-        print("*** temporary restriction ***")
-        print("Please provide with exact one argument")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
 
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
@@ -104,14 +41,17 @@ def shuffle(items, permutation):
     # but identical 'permutation', the order will be changed identically each time.
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
-def export(questions, pool):
+def export(questions, pool : str):
+
     for i,q in enumerate(questions):
 
-        # Test with 4 typical questions:
-        # if q.question_id != 'TA204': continue # question without picture; text answer
-        # if q.question_id != 'TF505': continue # ?
-        # if q.question_id != 'TH405': continue # question with picture; text answer
-        # if q.question_id != 'TC505': continue # pictures as answers
+        if "-beta" in sys.argv:
+            if not pool_tk.beta_test_exam_questions(q.question_id):
+                # print("Pos. C2B l.57 : beta-test = False --> Continue; " + q.question_id) #FIXME
+                continue
+            # else:
+                # print("Pos. C2B l.60 : beta-test = True; " + q.question_id) #FIXME PEPE
+
 
         # Card2Brain only allows plain-text answers. Thus, we have to implement
         # a quirk when answers contain math or images. In this case, answers
@@ -136,11 +76,11 @@ def export(questions, pool):
         count_images = 0    # In case we have more than one image, we have to group them one image.
         image_col = []      # needed for grouping images
 
-        # print('Pos. C2B 145: q.question_text = ' + q.question_text)  # FIXME PEPE
+        # print('Pos. C2B l.86: q.question_text = ' + q.question_text)  # FIXME PEPE
         question_text, question_images = extract_image(q.question_text)
-        # print('Pos. C2B 147: question_text = ' + question_text)  # FIXME PEPE
+        # print('Pos. C2B l.88: question_text = ' + question_text)  # FIXME PEPE
         # if question_images is not None:
-        #     print('Pos. C2B 148: question_images = ' + str(question_images))  # FIXME PEPE
+        #     print('Pos. C2B l.98: question_images = ' + str(question_images))  # FIXME PEPE
 
         if question_images is not None:
             # If an image was embedded in the middle of the question text
@@ -188,12 +128,12 @@ def export(questions, pool):
             for label,answer in zip(labels_new_order,answers_new_order):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
-                # print('Pos. C2B 197: answer = ' + answer) #FIXME PEPE
-                # print('Pos. C2B 198: image_tags = ' + str(image_tags)) #FIXME PEPE
+                # print('Pos. C2B l.138: answer = ' + answer) #FIXME PEPE
+                # print('Pos. C2B l.139: image_tags = ' + str(image_tags)) #FIXME PEPE
                 assert(len(image_tags) == 1) # check if allways one image per answer option
-                # print('Pos. C2B 200: image_tag = ' + str(image_tag))  # FIXME PEPE
+                # print('Pos. C2B l.141: image_tag = ' + str(image_tag))  # FIXME PEPE
                 match = re.search(image_tag, answer)
-                # print('Pos. C2B 202: match = ' + str(re.search(image_tag, answer)))  # FIXME PEPE
+                # print('Pos. C2B l.143: match = ' + str(re.search(image_tag, answer)))  # FIXME PEPE
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
                 image_row.append(img_tk.render_text(prefix))
@@ -226,7 +166,7 @@ def export(questions, pool):
         # End of: if '<img ' in q.answer_0: / else:
 
         # Text for field 'Ergänzung Antwort' in the XLSX file:
-        info_question_id = '(Frage-ID: ' + dict_arguments.get(sys.argv[1]) + '-' + q.question_id + ')'
+        info_question_id = '(Frage-ID: ' + pool_tk.dict_arguments.get(sys.argv[1]) + '-' + q.question_id + ')'
 
         # writing a row in the xlsx-file:
         if math_or_image_in_answer:
@@ -239,31 +179,48 @@ def export(questions, pool):
 # End of def - main code starts
 # ----------------------------------------------------------
 
-#
-check_arguments()
+#FIXME DEV modus # PEPE
+if len(sys.argv) < 2:
+    sys.argv.append('-a07')
+    sys.argv.append('-beta')
 
-if '-e06' in sys.argv or '-a07' in sys.argv:
+# Checking command line arguments: Only expected arguments in the list?
+pool_tk.check_arguments(sys.argv)
+
+# Set the active-pool:
+#FIXME Assumption: In the command line arguments we only accept one pool (and "-beta").
+if pool_tk.dict_arguments.get(sys.argv[1]) == "-beta":
+    pool_tk.set_active_pool(sys.argv[2])
+else:
+    pool_tk.set_active_pool(sys.argv[1])
+
+# print("Pos. C2B l.204 :" + pool_tk.active_pool()) #FIXME PEPE
+
+
+if pool_tk.check_active_pool(['-e06','-a07']):      # Is it one of these two pools?
+    # print("Pos. C2B l.208 : -e06 oder -a07") # FIXME PEPE
     img_tk.set_font_size(24)
     IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
-elif '-e24' in sys.argv or '-a24' in sys.argv:
+elif pool_tk.check_active_pool(['-e24','-a24']):    # or is it one of these two pools?
+    # print("Pos. C2B l.212 : -a06 oder -a07")  # FIXME PEPE
     img_tk.set_font_size(36)
     IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
 else:
-    print_separation_line()
+    pool_tk.print_separation_line()
     IMG_BASE_PATH = '*** question pool does not exist ***'
     print(IMG_BASE_PATH)
-    print_separation_line()
+    pool_tk.print_separation_line()
     exit()
 
 if not os.path.exists(IMG_BASE_PATH):
-    print_separation_line()
+    pool_tk.print_separation_line()
     print ('*** path to input files does not exist ***')
-    print_separation_line()
+    pool_tk.print_separation_line()
     exit()
 
 # The name of the folder for the output data can be
 # chosen freely. It is created in the project folder.
-OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + dict_arguments.get(sys.argv[1]) + '/'
+OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + pool_tk.dict_arguments.get(sys.argv[1]) + '/'
 
 # The name of the Excel file can be chosen freely.
 OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
@@ -334,8 +291,8 @@ else:
 
 workbook.close()
 
-print_separation_line()
+pool_tk.print_separation_line()
 print('Export completed.')
 print('The output data is stored in this path:')
 print('  ' + OUTPUT_FILE_PATH)
-print_separation_line()
+pool_tk.print_separation_line()
