@@ -1,14 +1,15 @@
 # Mat says:
-# This code needs major cleanup before it can be merged.
+# FIXME This code needs major cleanup before it can be merged.
 
-# Usage: python convert_to_card2brain [-e06] [-a07] [-e24] [-a24] [-beta]
-# For more details, see below in 'def print_arguments()'
+# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-beta|-math]
+# Parameters '-beta' and '-math' is only for beta testing
+# For more info, use parameter '-?'
 
-# Check for running the tool:
+# Check before running the tool:
 # Following file paths must exist in your project folder;
-# always: /library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
-# for DLE2006 and DLA2007: /input-files/afu-group-trainer/... with the files
-# for DLE2024 and DLA2024: /input-files/50ohm-pocket-main/... with the files
+# a) always: /library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
+# b) for DLE2006 and DLA2007: /input-files/afu-group-trainer/... with the files
+# c) for DLE2024 and DLA2024: /input-files/50ohm-pocket-main/... with the files
 #
 # The output files will be placed in a file folder named
 # /output-files/ in your project folder.
@@ -26,7 +27,7 @@ import sys
 import xlsxwriter
 
 # Project files:
-from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image, math_signs_much_less_n_much_greater
+from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image, math_signs_much_less_n_much_greater, remove_flaws_coming_from_json_source
      #FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
@@ -43,15 +44,18 @@ def shuffle(items, permutation):
 
 def export(questions, pool : str):
 
+    # for i,q in enumerate(questions):
+    xmlx_row =  0
+    steps_of_100 = list(range(100, 2000, 100))
     for i,q in enumerate(questions):
+
+        # print progress in steps of 100 converted and exported questions:
+        if i in steps_of_100:
+            print ('FYI: already ' + str(i) + ' questions checked and still running ...')
 
         if "-beta" in sys.argv:
             if not pool_tk.beta_test_exam_questions(q.question_id):
-                # print("Pos. C2B l.57 : beta-test = False --> Continue; " + q.question_id) #FIXME
                 continue
-            # else:
-                # print("Pos. C2B l.60 : beta-test = True; " + q.question_id) #FIXME PEPE
-
 
         # Card2Brain only allows plain-text answers. Thus, we have to implement
         # a quirk when answers contain math or images. In this case, answers
@@ -76,11 +80,7 @@ def export(questions, pool : str):
         count_images = 0    # In case we have more than one image, we have to group them one image.
         image_col = []      # needed for grouping images
 
-        # print('Pos. C2B l.86: q.question_text = ' + q.question_text)  # FIXME PEPE
         question_text, question_images = extract_image(q.question_text)
-        # print('Pos. C2B l.88: question_text = ' + question_text)  # FIXME PEPE
-        # if question_images is not None:
-        #     print('Pos. C2B l.98: question_images = ' + str(question_images))  # FIXME PEPE
 
         if question_images is not None:
             # If an image was embedded in the middle of the question text
@@ -128,12 +128,8 @@ def export(questions, pool : str):
             for label,answer in zip(labels_new_order,answers_new_order):
                 image_row = [img_tk.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
-                # print('Pos. C2B l.138: answer = ' + answer) #FIXME PEPE
-                # print('Pos. C2B l.139: image_tags = ' + str(image_tags)) #FIXME PEPE
                 assert(len(image_tags) == 1) # check if allways one image per answer option
-                # print('Pos. C2B l.141: image_tag = ' + str(image_tag))  # FIXME PEPE
                 match = re.search(image_tag, answer)
-                # print('Pos. C2B l.143: match = ' + str(re.search(image_tag, answer)))  # FIXME PEPE
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
                 image_row.append(img_tk.render_text(prefix))
@@ -168,11 +164,20 @@ def export(questions, pool : str):
         # Text for field 'Ergänzung Antwort' in the XLSX file:
         info_question_id = '(Frage-ID: ' + pool_tk.dict_arguments.get(sys.argv[1]) + '-' + q.question_id + ')'
 
-        # writing a row in the xlsx-file:
-        if math_or_image_in_answer:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
-        else:
-            worksheet.write_row(i+1,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],answers_new_order[0],solutions_new_order[1],answers_new_order[1],solutions_new_order[2],answers_new_order[2],solutions_new_order[3],answers_new_order[3],'','','','','',''])
+        # In case of parameter '-math' only export questions containing a LaTex term:
+        if "-math" not in sys.argv or "<span" in question_text:
+            xmlx_row += 1
+            # write a row in the xlsx-file:
+            if math_or_image_in_answer:
+                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
+            else:
+                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],answers_new_order[0],solutions_new_order[1],answers_new_order[1],solutions_new_order[2],answers_new_order[2],solutions_new_order[3],answers_new_order[3],'','','','','',''])
+
+    # end of 'for q in questions'
+
+    pool_tk.print_separation_line()
+    print(str(xmlx_row) + " rows exported with parameter " + str(sys.argv[1:]))
+
 # end of def export
 
 # ----------------------------------------------------------
@@ -181,7 +186,7 @@ def export(questions, pool : str):
 
 #FIXME DEV modus # PEPE
 if len(sys.argv) < 2:
-    sys.argv.append('-a07')
+    sys.argv.append('-a24')
     sys.argv.append('-beta')
 
 # Checking command line arguments: Only expected arguments in the list?
@@ -194,15 +199,10 @@ if pool_tk.dict_arguments.get(sys.argv[1]) == "-beta":
 else:
     pool_tk.set_active_pool(sys.argv[1])
 
-# print("Pos. C2B l.204 :" + pool_tk.active_pool()) #FIXME PEPE
-
-
 if pool_tk.check_active_pool(['-e06','-a07']):      # Is it one of these two pools?
-    # print("Pos. C2B l.208 : -e06 oder -a07") # FIXME PEPE
     img_tk.set_font_size(24)
     IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
 elif pool_tk.check_active_pool(['-e24','-a24']):    # or is it one of these two pools?
-    # print("Pos. C2B l.212 : -a06 oder -a07")  # FIXME PEPE
     img_tk.set_font_size(36)
     IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
 else:
@@ -256,43 +256,42 @@ title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung 
 title_format = workbook.add_format({'bold': True})
 worksheet.write_row(0, 0, title, title_format)
 
+#  Links of images in the JSON file have this character sequence:
+image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
+
+# Choose the correct parser
 if '-e06' in sys.argv or '-a07' in sys.argv:
-    #  Links of images in the JSON file have this character sequence:
-    image_tag = r'<img src="([^"]*)">' # Regular Expression: https://www.w3schools.com/python/python_regex.asp
-
-    # Parsing
     qp = json_parser2007()
-    qp.attach_text_processor(latex_to_utf8)
-    qp.attach_text_processor(latex_to_utf8_subsuperscript)
-    qp.attach_text_processor(to_card2brain)
-    qp.attach_text_processor(math_signs_much_less_n_much_greater)
-    if '-e06' in sys.argv:
-        export(qp.novice_questions(), 'HB3')
-    else:  # '-e24' in sys.argv
-        export(qp.cept_questions(), 'HB9')
-
 elif '-e24' in sys.argv or '-a24' in sys.argv:
-
-    #  Links of images in the JSON file have this character sequence:
-    image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
-
-    # Parsing...
     qp = json_parser2024()
-    qp.attach_text_processor(latex_to_utf8)
-    qp.attach_text_processor(latex_to_utf8_subsuperscript)
-    qp.attach_text_processor(to_card2brain)
-    if '-e24' in sys.argv:
-        export(qp.novice_questions(), 'HB3')
-    else:  # 'a24' in sys.argv
+    qp.attach_text_processor(remove_flaws_coming_from_json_source)
+else:
+    qp = json_parser2007()
+    pool_tk.print_separation_line()
+    print("Error with 'sys.argv' when choosing the parser")
+    pool_tk.print_separation_line()
+    assert False
+
+# Parsing elements
+qp.attach_text_processor(latex_to_utf8)
+qp.attach_text_processor(latex_to_utf8_subsuperscript)
+qp.attach_text_processor(to_card2brain)
+if '-a07' in sys.argv:
+    qp.attach_text_processor(math_signs_much_less_n_much_greater)
+
+if '-e06' in sys.argv or '-e24' in sys.argv:
+    export(qp.novice_questions(), 'HB3')
+elif '-a07' in sys.argv or '-a24' in sys.argv:
         export(qp.cept_questions(), 'HB9')
 else:
-    print("Error with 'sys.argv' in 'def export'")
+    pool_tk.print_separation_line()
+    print("Error with 'sys.argv' when calling 'def export'")
+    pool_tk.print_separation_line()
     assert False
 
 workbook.close()
 
-pool_tk.print_separation_line()
-print('Export completed.')
+print('Excel file closed; export completed.')
 print('The output data is stored in this path:')
 print('  ' + OUTPUT_FILE_PATH)
 pool_tk.print_separation_line()
