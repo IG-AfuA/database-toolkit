@@ -4,9 +4,13 @@ import json
 from dataclasses import dataclass
 import re
 
-# TODO:
+# Sample how math terms can be used in Card2Brain app in the question field.
+# <span class="math-tex">\(\frac{P}{U^2} = R\)</span></p>
+
+# FIXME @Mats: Is this note still needed?
 # - Translate $>>$ and $<<$
 # - Translate < and >
+
 
 # In case your export file will contain links to images or 'Lichtblicke', you
 # have to specify a base URL here. This would be needed for, e.g., the classmarker
@@ -33,6 +37,27 @@ def math_signs_much_less_n_much_greater(text: str):
     text = re.sub(r'>>', '≫', text)
     return text
 
+def remove_flaws_coming_from_json_source(text: str):
+
+    # Flaw in DL-2024 question pools:
+    # change '\[ ... \]' to '<br>$ ... $<br>' because Card2Brain app can't handle '\[ ... \]'
+    text = re.sub(r'\\\[', '<br>$', text)
+    text = re.sub(r'\\\]', '$<br>', text)
+
+    # Flaw in DL-2024 question pools:
+    # incorrect LaTex term: '\kiloOhm' --> 'k\Omega'
+    text = re.sub(r'\\kiloOhm', r'k\\Omega', text)
+
+    # Flaw in DL-2024 question pools:
+    # incorrect LaTex term: '\mOhm' --> 'm\Omega'
+    text = re.sub(r'\\mOhm', r'm\\Omega', text)
+
+    # Flaw in DL-2024 question pools:
+    # remove space before angle-sign: '90 °' --> '90°'
+    text = re.sub(' \u00b0', '\u00b0', text)
+
+    return text
+
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
     html_str = re.sub(r'<strong>(.*?)</strong>', r'[b]\1[/b]', html_str)
@@ -51,12 +76,19 @@ def latex_to_utf8(text: str):
         text = re.sub(r'\\pi', 'π', text)
         text = re.sub(r'\\lambda', 'λ', text)
         text = re.sub(r'\\Delta ?', 'Δ', text)
-        text = re.sub(r'\\Omega ?', 'Ω', text)
+        text = re.sub(r'\\delta ?', 'δ', text)
+        text = re.sub(r'\\phi ?', 'φ', text)
+        text = re.sub(r'\\varphi ?', 'φ', text)
+        text = re.sub(r'\\Omega ?', 'Ω', text)  # \Omega + Leerschlag
+        text = re.sub(r'\\Omega,', 'Ω,', text)  # \Omega + Komma
 
         text = re.sub(r'\\approx', '≈', text)
         text = re.sub(r'\\cdot{}', '·', text)
         text = re.sub(r'\\cdot ?', '·', text)
-        text = re.sub(r'\^{\\circ}', '°', text)  # Degree sign (for angle)
+
+        # Degree sign (for angle):
+        text = re.sub(r'\^{\\circ}', '°', text)  # Notation in DLE2006/DLA2007 question pool
+        text = re.sub(r'\^\\circ', '°', text)  # Notation in DLA2024 question pool
 
         if '\\' not in text and '_' not in text and '^' not in text:
             # String is latex-free now, so we can strip the dollars
@@ -75,8 +107,10 @@ def latex_to_utf8_subsuperscript(text: str):
                 '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
                 'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
                 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
-                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '̓'
+                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '·'
             }
+            # for comma using U+00B7 --> ',': '·' (used in DLA-2007-TA113)
+
             return ''.join([superscript_map[i] for i in text])
 
         def _latex_to_utf8_subscript(match:re.Match):
@@ -99,6 +133,7 @@ def latex_to_utf8_subsuperscript(text: str):
             return text[1:-1]
         else:
             return text
+
 
     return re.sub(r'\$(.*?)\$', _latex_to_utf8_subsuperscript, text)
 
