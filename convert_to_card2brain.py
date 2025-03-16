@@ -100,12 +100,14 @@ def export(questions, pool : str):
             new_question_image = ''
 
         elif len(question_images) == 1:
+            # print('Pos. C2B l.103: 1 q-image at ' + q.question_id) #FIXME
             count_images += 1
             new_question_image = re.sub(r'/', '_', question_images[0])
-            # # and now wait if further images will be added from the answers.
+            # and now wait if further images will be added from the answers.
             # Only then decide whether the image should remain unchanged or grouped.
 
         else: # len(question_images) > 1:
+            # print('Pos. C2B l.110: >1 q-images at ' + q.question_id + 'len=' + len(question_images))  # FIXME
             count_images += len(question_images)
             new_question_image = re.sub(r'/', '_', question_images[0])
             for img_nr in range(len(question_images)):
@@ -116,6 +118,12 @@ def export(questions, pool : str):
         if '<img ' in q.answer_0:
             # if statement only checks answer_0 because either all four or none of the four
             # answer options each consist of one image.
+
+            # if there is also 1 (one!) question image, it is now the time, to append it:
+            if count_images == 1:
+                # print('Pos. C2B l.124: 1 q-image attached to  row for ' + q.question_id)  # FIXME
+                new_question_image = re.sub(r'/', '_', question_images[0])
+                image_col.append(img_tk.load(IMG_BASE_PATH + question_images[0]))
 
             # answer options each consist of one image:
             math_or_image_in_answer = True
