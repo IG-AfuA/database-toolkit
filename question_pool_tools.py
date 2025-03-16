@@ -199,7 +199,7 @@ def beta_test_exam_questions(question : str):
             "EF309",    # question with big image
             "EG102",    # answers with lamda sign
             "EG111",    # image in question should be one big image
-            "EG502"    # answers with long math terms
+            "EG502"     # answers with long math terms
         ]
         return question in selection
 
@@ -208,33 +208,28 @@ def beta_test_exam_questions(question : str):
             "AB103",    # Testen frac --> dfrag #FIXME
             "AB104",    # answers with long texts
             "AB208",    # answers with omega signs
-            "AC304",    # 'kOhm.' in question
-            "AC405",    # images in question and answers #FIXME Bild von Frage fehlt
-            "AC406",    # images in question and answers #FIXME Bild von Frage fehlt
-            "AC515",    # 'kOhm' in answers #FIXME
-            "AC522",    # 'kOhm ' und 'kOhm;' in question #FIXME
-            "AC523",    # 'm\Omega' in question #FIXME
-            "AD109",    # question with image in landscape format #FIXME 'kOhm' in Frage
-            "AD110",    # ERROR missing subscript in answers # FIXME
-            "AD111",    # ERROR missing subscript in answers # FIXME
-            "AD113",    # kOhm; und kOhm. # FIXME
+            "AC405",    # 2 images in question and 1 per answer #FIXME question images in 1 file
+            "AC406",    # 2 images in question and 1 per answer #FIXME question images in 1 filer
+            "AC522",    # question with originally 'kOhm'
+            "AC523",    # question with originally with 'm\Omega'
+            "AD109",    # question with image in landscape format
+            "AD110",    # subscript in answers # FIXME in app R_1 is not displayed
+            "AD111",    # subscript in answers # FIXME in app R_1 is not displayed
             "AD114",    # question with image in portrait format
             "AD305",    # square size images in all answers
             "AD307",    # images in landscape format in all answers
-            "AD308",    # images in question and answers #FIXME
+            "AD308",    # 1 image in question and 1 in each answer
             "AD402",    # questions and answers with v_U #FIXME utf/LaTex-Combo
-            "AD406",    # images in question and answers #FIXME Bild von Frage fehlt
-            "AD408",    # images in question and answers #FIXME Bild von Frage fehlt
-            "AD410",
-            "AD416",    # ERROR missing subscript in answers # FIXME
+            "AD406",    # 2 images in question and 1 in each answer #FIXME question images in 1 file
+            "AD408",    # 3? images in question and 1 in each answer #FIXME question images in 1 file
+            "AD410",    # questions and answers with v_U #FIXME utf/LaTex-Combo
+            "AD416",    # subscript in answers # FIXME : in the app R_1 is not displayed
             "AF120",    # question with large size image in landscape format
             "AF210",    # question with large size image in landscape format
-            "AF314",    # ERROR answers #FIXME
             "AF426",    # question with big square size image
             "AG502",    # question with long math term #FIXME
             "AH102",    # answers with long texts
-            "AH204",    # question with foF2, #FIXME
-            "AH206",    # answers with f_opt, f_krit, foF2, #FIXME
+            "AH204",    # question with originally 'foF2'
             "AK103"     # testen frac --> dfrac
         ]
         return question in selection
