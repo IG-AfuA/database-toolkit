@@ -49,8 +49,19 @@ def remove_flaws_coming_from_json_source(text: str):
     text = re.sub(r'\\kiloOhm', r'k\\Omega', text)
 
     # Flaw in DL-2024 question pools:
-    # incorrect LaTex term: '\mOhm' --> 'm\Omega'
-    text = re.sub(r'\\mOhm', r'm\\Omega', text)
+    # question pool contains in plain text: '\mOhm' --> ''mΩ'
+    text = re.sub(r'\\mOhm', 'mΩ', text)
+
+    # Flaw in DL-2024 question pools:
+    # plain text: 'foF2' --> 'f₀F2'
+    # Quote 50ohm.de:
+    # > Als Formelzeichen verwendet man f₀ (kleiner tiefgestellter Buchstabe „O“ für ordinary wave) gefolgt von
+    # > der ionosphärischen Region, für die diese Frequenz gilt, also z.B. f₀F2 für die F2-Region.
+    text = re.sub('foF2', 'f₀F2', text)
+
+    # Flaw in DL-2024 question pools:
+    # plain text: 'kOhm' --> 'kΩ'
+    text = re.sub('kOhm', 'kΩ', text)
 
     # Flaw in DL-2024 question pools:
     # remove space before angle-sign: '90 °' --> '90°'
