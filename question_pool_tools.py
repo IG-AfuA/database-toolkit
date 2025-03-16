@@ -1,5 +1,20 @@
 # no IMPORT needed
 
+
+# Usage of this dictionary:
+# Keys = allowed command line parameters
+# Values = used as part of file path name
+#          and used as info in the Excel in the field 'Ergänzung A'
+dict_arguments  = {
+    "-?":"INFOS",        # for more info see below in def print_arguments()
+    "-e06":"DLE-2006",
+    "-a07":"DLA-2007",
+    "-e24":"DLE-2024",
+    "-a24":"DLA-2024",
+    "-beta":"ONLY-FOR-BETA-TESTING",  # for more info see below in def print_arguments()
+    "-math":"ONLY-FOR-BETA-TESTING"   # for more info see below in def print_arguments()
+}
+
 def print_arguments():
     print("Possible command line arguments are:")
     print("-?   : Is showing this overview of possible arguments")
@@ -14,20 +29,9 @@ def print_arguments():
 def print_separation_line():
     print("--------------------------------")
 
-# Dictionary of allowed command line arguments
-# Values are needed for:
-# -- part of file path names
-# -- info in the Excel in the field 'Ergänzung A'
-dict_arguments  = {
-    "-e06":"DLE-2006",
-    "-a07":"DLA-2007",
-    "-e24":"DLE-2024",
-    "-a24":"DLA-2024",
-    "-beta":"ONLY-FOR-BETA-TESTING",
-    "-math":"ONLY-FOR-BETA-TESTING"
-}
 
-ACTIVE_POOL = ""
+ACTIVE_POOL = ""    # which question pool will be exported now?
+
 
 def set_active_pool(pool : str):
     global ACTIVE_POOL
@@ -40,14 +44,25 @@ def check_active_pool(pool_list: list):
     return ACTIVE_POOL in pool_list
 
 def check_arguments(arguments):
-    count_error = 0
 
+    # check if received only allowed command line arguments
+    for string_element in arguments[1:]:
+        if string_element not in list(dict_arguments.keys()):
+            print_separation_line()
+            print("Error: '" + string_element + "' is not a correct command line argument.")
+            print_separation_line()
+            print_arguments()
+            print_separation_line()
+            exit()
+
+    # check for the '-?' argument
     if '-?' in arguments:
         print_separation_line()
         print_arguments()
         print_separation_line()
         exit()
 
+    # '-beta' and '-math' are not allowed as combination
     if '-beta' in arguments and '-math' in arguments:
         print_separation_line()
         print("'-beta' and '-math' can not be used together")
@@ -56,28 +71,17 @@ def check_arguments(arguments):
         print_separation_line()
         exit()
 
+    # check if at least 1 argument defines a question pool
     if '-beta' in arguments or '-math' in arguments:
-        maximal_arg = 2
+        minimal_arg = 3
     else:
-        maximal_arg = 1
-    if len(arguments) < (maximal_arg + 1):
+        minimal_arg = 2
         # sys.argv[0] contains path and script name
-        # arguments in sys.argv[1] and following
+        # the arguments are in sys.argv[1] and following
+
+    if len(arguments) < minimal_arg:
         print_separation_line()
         print("Please provide at least one question pool as command line argument.")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
-    else:
-        for string_element in arguments[1:]:
-            if string_element in list(dict_arguments.keys()):
-                pass
-            else:
-                count_error += 1
-                print_separation_line()
-                print("Error: '" + string_element + "' is not a correct command line argument.")
-    if count_error > 0:
         print_separation_line()
         print_arguments()
         print_separation_line()
@@ -85,11 +89,11 @@ def check_arguments(arguments):
 
     # FIXME temporary restriction
     # source code can so far only handle one question pool
-    if len(arguments) > (maximal_arg + 1):
+    if len(arguments) > minimal_arg:
         print_separation_line()
         print("*** temporary restriction ***")
         print("Please provide with exact one question pool argument")
-        print("and additional as second argument is only '-beta' possible.")
+        print("and additional as second argument is only '-beta' or '-math' possible.")
         print_separation_line()
         print_arguments()
         print_separation_line()
