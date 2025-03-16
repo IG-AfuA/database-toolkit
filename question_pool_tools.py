@@ -1,6 +1,5 @@
 # no IMPORT needed
 
-
 # Usage of this dictionary:
 # Keys = allowed command line parameters
 # Values = used as part of file path name
@@ -45,31 +44,28 @@ def check_active_pool(pool_list: list):
 
 def check_arguments(arguments):
 
+    def print_arguments_n_exit():
+        print_separation_line()
+        print_arguments()
+        print_separation_line()
+        exit()
+
     # check if received only allowed command line arguments
     for string_element in arguments[1:]:
         if string_element not in list(dict_arguments.keys()):
             print_separation_line()
             print("Error: '" + string_element + "' is not a correct command line argument.")
-            print_separation_line()
-            print_arguments()
-            print_separation_line()
-            exit()
+            print_arguments_n_exit()
 
     # check for the '-?' argument
     if '-?' in arguments:
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
+        print_arguments_n_exit()
 
     # '-beta' and '-math' are not allowed as combination
     if '-beta' in arguments and '-math' in arguments:
         print_separation_line()
         print("'-beta' and '-math' can not be used together")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
+        print_arguments_n_exit()
 
     # check if at least 1 argument defines a question pool
     if '-beta' in arguments or '-math' in arguments:
@@ -82,10 +78,7 @@ def check_arguments(arguments):
     if len(arguments) < minimal_arg:
         print_separation_line()
         print("Please provide at least one question pool as command line argument.")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
+        print_arguments_n_exit()
 
     # FIXME temporary restriction
     # source code can so far only handle one question pool
@@ -94,10 +87,7 @@ def check_arguments(arguments):
         print("*** temporary restriction ***")
         print("Please provide with exact one question pool argument")
         print("and additional as second argument is only '-beta' or '-math' possible.")
-        print_separation_line()
-        print_arguments()
-        print_separation_line()
-        exit()
+        print_arguments_n_exit()
 
 
 def beta_test_exam_questions(question : str):
