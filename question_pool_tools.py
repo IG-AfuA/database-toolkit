@@ -1,18 +1,22 @@
-# no IMPORT needed
+from toolkit_system import exit_with_line_info
 
 # Usage of this dictionary:
 # Keys = allowed command line parameters
 # Values = used as part of file path name
 #          and used as info in the Excel in the field 'Ergänzung A'
-dict_arguments  = {
-    "-?":"INFOS",        # for more info see below in def print_arguments()
+dict_pool_arguments  = {
     "-e06":"DLE-2006",
     "-a07":"DLA-2007",
     "-e24":"DLE-2024",
     "-a24":"DLA-2024",
-    "-beta":"ONLY-FOR-BETA-TESTING",  # for more info see below in def print_arguments()
-    "-math":"ONLY-FOR-BETA-TESTING"   # for more info see below in def print_arguments()
 }
+
+allowed_service_arguments = ["-?", "-beta","-math", "-l"]
+allowed_pool_arguments = []     # see commend below; source is dict_pool_arguments
+allowed_all_arguments = []      # see commend below
+list_scheduled_pools = []       # see commend below
+arg_active_pool = ""
+# These variables will be filled initially in def read_out_arguments (see below)
 
 def print_arguments():
     print("Possible command line arguments are:")
@@ -21,6 +25,7 @@ def print_arguments():
     print("-a07 : Export question pool year 2007 for Advanced Licence from BNetzA Germany")
     print("-e24 : Export question pool year 2024 for Novice Licence from BNetzA Germany")
     print("-a24 : Export question pool year 2024 for Advanced Licence from BNetzA Germany")
+    print('-l   : Add link to "Lichtblicke" (not available for "Card2Brain")')
     print("And only for beta testing: either '-beta' or '-math'")
     print("-beta : Only some typical examples from the selected question pool will be exported")
     print("-math : Only questions containing LaTex code will be exported")
@@ -28,21 +33,44 @@ def print_arguments():
 def print_separation_line():
     print("--------------------------------")
 
-
-ACTIVE_POOL = ""    # which question pool will be exported now?
-
-
 def set_active_pool(pool : str):
-    global ACTIVE_POOL
-    ACTIVE_POOL = pool
+    global arg_active_pool
+    arg_active_pool = pool
 
-def active_pool():
-    return ACTIVE_POOL
+def get_active_pool():
+    return arg_active_pool
 
 def check_active_pool(pool_list: list):
-    return ACTIVE_POOL in pool_list
+    return arg_active_pool in pool_list
 
-def check_arguments(arguments):
+def read_out_arguments(arguments):
+
+    global allowed_all_arguments
+    global allowed_pool_arguments
+    global allowed_service_arguments
+    global list_scheduled_pools
+    global arg_active_pool
+
+
+    # PART ONE : Initialize all the variables
+    # =======================================
+
+    # generate list_pool_arguments
+    allowed_pool_arguments = list(dict_pool_arguments.keys())
+
+    # generate list_all_arguments
+    allowed_all_arguments.extend(allowed_pool_arguments)
+    for i in allowed_service_arguments:
+        allowed_all_arguments.append(i)
+
+    # generate list_scheduled_pools
+    for i in arguments:
+        if i in allowed_pool_arguments:
+            list_scheduled_pools.append(i)
+
+
+    # PART TWO : Check, if the received arguments are correct
+    # =======================================================
 
     def print_arguments_n_exit():
         print_separation_line()
@@ -52,7 +80,7 @@ def check_arguments(arguments):
 
     # check if received only allowed command line arguments
     for string_element in arguments[1:]:
-        if string_element not in list(dict_arguments.keys()):
+        if string_element not in allowed_all_arguments:
             print_separation_line()
             print("Error: '" + string_element + "' is not a correct command line argument.")
             print_arguments_n_exit()
@@ -78,15 +106,6 @@ def check_arguments(arguments):
     if len(arguments) < minimal_arg:
         print_separation_line()
         print("Please provide at least one question pool as command line argument.")
-        print_arguments_n_exit()
-
-    # FIXME temporary restriction
-    # source code can so far only handle one question pool
-    if len(arguments) > minimal_arg:
-        print_separation_line()
-        print("*** temporary restriction ***")
-        print("Please provide with exact one question pool argument")
-        print("and additional as second argument is only '-beta' or '-math' possible.")
         print_arguments_n_exit()
 
 
@@ -229,8 +248,6 @@ def beta_test_exam_questions(question : str):
         return question in selection
 
     else:
-        print_separation_line()
-        print("ERROR in modul question_pool_tools.py")
-        print("Question pool unknown in def beta_test_exam_question()")
-        print_separation_line()
-        return True     # True = every question is accepted
+        print(question)
+        exit_with_line_info("question pool unknown in function 'beta_test_exam_questions' " )
+        return True

@@ -27,13 +27,15 @@ import sys
 import xlsxwriter
 
 # Project files:
-from json_parser import latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image, math_signs_much_less_n_much_greater, remove_flaws_coming_from_json_source
+from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image,
+                         math_signs_much_less_n_much_greater, remove_flaws_coming_from_json_source)
      #FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
-import question_pool_tools as pool_tk
-
+from question_pool_tools import (read_out_arguments, list_scheduled_pools, set_active_pool, dict_pool_arguments,
+                                 beta_test_exam_questions, get_active_pool)
+from toolkit_system import exit_with_line_info
 
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
@@ -46,15 +48,10 @@ def export(questions, pool : str):
 
     # for i,q in enumerate(questions):
     xmlx_row =  0
-    steps_of_100 = list(range(100, 2000, 100))
-    for i,q in enumerate(questions):
-
-        # print progress in steps of 100 converted and exported questions:
-        if i in steps_of_100:
-            print ('FYI: already ' + str(i) + ' questions checked and still running ...')
+    for q in questions:
 
         if "-beta" in sys.argv:
-            if not pool_tk.beta_test_exam_questions(q.question_id):
+            if not beta_test_exam_questions(q.question_id):
                 continue
 
         # Card2Brain only allows plain-text answers. Thus, we have to implement
@@ -90,7 +87,7 @@ def export(questions, pool : str):
             # If an image was embedded before or after the question text
             # then there was usually a <br> between image and text,
             # which now has to be removed:
-            #FIXME Das geht eleganter
+            #FIXME Geht das  auch eleganter? @Mats
             if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
                 question_text = question_text[4:]
             if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
@@ -100,14 +97,12 @@ def export(questions, pool : str):
             new_question_image = ''
 
         elif len(question_images) == 1:
-            # print('Pos. C2B l.103: 1 q-image at ' + q.question_id) #FIXME
             count_images += 1
             new_question_image = re.sub(r'/', '_', question_images[0])
             # and now wait if further images will be added from the answers.
             # Only then decide whether the image should remain unchanged or grouped.
 
         else: # len(question_images) > 1:
-            # print('Pos. C2B l.110: >1 q-images at ' + q.question_id + 'len=' + len(question_images))  # FIXME
             count_images += len(question_images)
             new_question_image = re.sub(r'/', '_', question_images[0])
             for img_nr in range(len(question_images)):
@@ -121,7 +116,6 @@ def export(questions, pool : str):
 
             # if there is also 1 (one!) question image, it is now the time, to append it:
             if count_images == 1:
-                # print('Pos. C2B l.124: 1 q-image attached to  row for ' + q.question_id)  # FIXME
                 new_question_image = re.sub(r'/', '_', question_images[0])
                 image_col.append(img_tk.load(IMG_BASE_PATH + question_images[0]))
 
@@ -170,7 +164,7 @@ def export(questions, pool : str):
         # End of: if '<img ' in q.answer_0: / else:
 
         # Text for field 'Ergänzung Antwort' in the XLSX file:
-        info_question_id = '(Frage-ID: ' + pool_tk.dict_arguments.get(sys.argv[1]) + '-' + q.question_id + ')'
+        info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
 
         # In case of parameter '-math' only export questions containing a LaTex term:
         if "-math" not in sys.argv or "<span" in question_text:
@@ -183,8 +177,7 @@ def export(questions, pool : str):
 
     # end of 'for q in questions'
 
-    pool_tk.print_separation_line()
-    print(str(xmlx_row) + " rows exported with parameter " + str(sys.argv[1:]))
+    print(str(xmlx_row) + " rows exported for " + get_active_pool())
 
 # end of def export
 
@@ -192,57 +185,18 @@ def export(questions, pool : str):
 # End of def - main code starts
 # ----------------------------------------------------------
 
-#FIXME DEV modus # PEPE
+#FIXME DEV modus
 if len(sys.argv) < 2:
     sys.argv.append('-a24')
-    sys.argv.append('-beta')
+    sys.argv.append('-e06')
+    sys.argv.append('-e24')
+    sys.argv.append('-a07')
 
-# Checking command line arguments: Only expected arguments in the list?
-pool_tk.check_arguments(sys.argv)
 
-# Set the active-pool:
-#FIXME Assumption: In the command line arguments we only accept one pool (and "-beta").
-if pool_tk.dict_arguments.get(sys.argv[1]) == "-beta":
-    pool_tk.set_active_pool(sys.argv[2])
-else:
-    pool_tk.set_active_pool(sys.argv[1])
-
-if pool_tk.check_active_pool(['-e06','-a07']):      # Is it one of these two pools?
-    img_tk.set_font_size(24)
-    IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
-elif pool_tk.check_active_pool(['-e24','-a24']):    # or is it one of these two pools?
-    img_tk.set_font_size(36)
-    IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
-else:
-    pool_tk.print_separation_line()
-    IMG_BASE_PATH = '*** question pool does not exist ***'
-    print(IMG_BASE_PATH)
-    pool_tk.print_separation_line()
-    exit()
-
-if not os.path.exists(IMG_BASE_PATH):
-    pool_tk.print_separation_line()
-    print ('*** path to input files does not exist ***')
-    pool_tk.print_separation_line()
-    exit()
-
-# The name of the folder for the output data can be
-# chosen freely. It is created in the project folder.
-OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + pool_tk.dict_arguments.get(sys.argv[1]) + '/'
-
-# The name of the Excel file can be chosen freely.
-OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
-
-# DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
-OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/'
-
-# Checking whether the folder path with all the required subfolders
-# already exists. If not, it will be created.
-if not os.path.exists(OUTPUT_IMG_PATH):
-    try:
-        os.makedirs(OUTPUT_IMG_PATH)
-    except OSError as e:
-        print(f"Error message was generated when creating the folder path: {e}")
+# Read out the command line arguments:
+# -- Checking: are only expected arguments in the list?
+# -- Schedule the asked question pools
+read_out_arguments(sys.argv)
 
 # Labels for those answers with pictures or math formulas:
 LABELS = ('Œ','Ø','][','@')
@@ -253,53 +207,88 @@ ANSWERS_PER_QUESTION = 4
 # Generate a list of all possible tuple combinations:
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
-# Open the Excel file in the output file folder:
-workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+# Separator
+print(' ')
 
-# Open a worksheet in the Excel file:
-worksheet = workbook.add_worksheet('Fragen')
+# Loop for every asked question pool
+for pool_argument in list_scheduled_pools:
 
-# Write row[0], the title row, in the worksheet of the Excel file:
-title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung F','Phonetics F','Beispielsatz F','Audio F','Bild F','Ergänzung A','Phonetics A','Beispielsatz A','Audio A','Bild A','MCA1 Correct','MCA1 Text','MCA2 Correct','MCA2 Text','MCA3 Correct','MCA3 Text','MCA4 Correct','MCA4 Text','MCA5 Correct','MCA5 Text','Copyright Image F','Copyright Image A','Copyright Audio F','Copyright Audio A')
-title_format = workbook.add_format({'bold': True})
-worksheet.write_row(0, 0, title, title_format)
+    set_active_pool(pool_argument)
 
-#  Links of images in the JSON file have this character sequence:
-image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
+    if pool_argument in ['-e06','-a07']:      # Is it one of these two pools?
+        img_tk.set_font_size(24)
+        IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
+    elif pool_argument in ['-e24','-a24']:    # or is it one of these two pools?
+        img_tk.set_font_size(36)
+        IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
+    else:
+        IMG_BASE_PATH = 'ERROR'
+        exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
-# Choose the correct parser
-if '-e06' in sys.argv or '-a07' in sys.argv:
-    qp = json_parser2007()
-elif '-e24' in sys.argv or '-a24' in sys.argv:
-    qp = json_parser2024()
-    qp.attach_text_processor(remove_flaws_coming_from_json_source)
-else:
-    qp = json_parser2007()
-    pool_tk.print_separation_line()
-    print("Error with 'sys.argv' when choosing the parser")
-    pool_tk.print_separation_line()
-    assert False
+    if not os.path.exists(IMG_BASE_PATH):
+        exit_with_line_info('path to input files does not exist')
 
-# Parsing elements
-qp.attach_text_processor(latex_to_utf8)
-qp.attach_text_processor(latex_to_utf8_subsuperscript)
-qp.attach_text_processor(to_card2brain)
-if '-a07' in sys.argv:
-    qp.attach_text_processor(math_signs_much_less_n_much_greater)
+    # The name of the folder for the output data can be
+    # chosen freely. It is created in the project folder.
+    OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + dict_pool_arguments.get(get_active_pool()) + '/'
 
-if '-e06' in sys.argv or '-e24' in sys.argv:
-    export(qp.novice_questions(), 'HB3')
-elif '-a07' in sys.argv or '-a24' in sys.argv:
+    # The name of the Excel file can be chosen freely.
+    OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
+
+    # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
+    OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/'
+
+    # Checking whether the folder path with all the required subfolders
+    # already exists. If not, it will be created.
+    if not os.path.exists(OUTPUT_IMG_PATH):
+        try:
+            os.makedirs(OUTPUT_IMG_PATH)
+        except OSError as e:
+            print(f"Error message was generated when creating the folder path: {e}")
+            exit_with_line_info("Could not generate path 'OUTPUT_IMG_PATH = " + OUTPUT_IMG_PATH)
+
+    # Open the Excel file in the output file folder:
+    workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+
+    # Open a worksheet in the Excel file:
+    worksheet = workbook.add_worksheet('Fragen')
+
+    # Write row[0], the title row, in the worksheet of the Excel file:
+    title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung F','Phonetics F','Beispielsatz F','Audio F','Bild F','Ergänzung A','Phonetics A','Beispielsatz A','Audio A','Bild A','MCA1 Correct','MCA1 Text','MCA2 Correct','MCA2 Text','MCA3 Correct','MCA3 Text','MCA4 Correct','MCA4 Text','MCA5 Correct','MCA5 Text','Copyright Image F','Copyright Image A','Copyright Audio F','Copyright Audio A')
+    title_format = workbook.add_format({'bold': True})
+    worksheet.write_row(0, 0, title, title_format)
+
+    #  Links of images in the JSON file have this character sequence:
+    image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
+
+    # Choose the correct parser
+    if pool_argument in ['-e06','-a07']:
+        qp = json_parser2007()
+    elif pool_argument in ['-e24','-a24']:
+        qp = json_parser2024()
+        qp.attach_text_processor(remove_flaws_coming_from_json_source)
+    else:
+        qp = json_parser2007()
+        exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
+
+    # Parsing elements
+    qp.attach_text_processor(latex_to_utf8)
+    qp.attach_text_processor(latex_to_utf8_subsuperscript)
+    qp.attach_text_processor(to_card2brain)
+    if '-a07' in sys.argv:
+        qp.attach_text_processor(math_signs_much_less_n_much_greater)
+
+    if pool_argument in ['-e06','-e24']: # novice licence question pools
+        export(qp.novice_questions(), 'HB3')
+    elif pool_argument in ['-a07','-a24']: # cept licence question pools
         export(qp.cept_questions(), 'HB9')
-else:
-    pool_tk.print_separation_line()
-    print("Error with 'sys.argv' when calling 'def export'")
-    pool_tk.print_separation_line()
-    assert False
+    else:
+        exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
-workbook.close()
+    workbook.close()
 
-print('Excel file closed; export completed.')
-print('The output data is stored in this path:')
-print('  ' + OUTPUT_FILE_PATH)
-pool_tk.print_separation_line()
+    print('  --> the output data is stored in <' + OUTPUT_FILE_PATH +'>')
+
+print("Mission accomplished for the arguments " + str(sys.argv[1:]))
+if '-l' in sys.argv:
+    print("Argument '-l' (Lichtblicke) is not supported by the Card2Brain app.")
