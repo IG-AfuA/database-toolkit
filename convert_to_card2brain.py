@@ -33,7 +33,7 @@ from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2br
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
-from question_pool_tools import (read_out_arguments, list_scheduled_pools, set_active_pool, dict_pool_arguments,
+from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool, dict_pool_arguments,
                                  beta_test_exam_questions, get_active_pool)
 from toolkit_system import exit_with_line_info
 
