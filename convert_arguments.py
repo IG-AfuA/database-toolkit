@@ -30,9 +30,6 @@ def print_arguments():
     print("-beta : Only some typical examples from the selected question pool will be exported")
     print("-math : Only questions containing LaTex code will be exported")
 
-def print_separation_line():
-    print("--------------------------------")
-
 def set_active_pool(pool : str):
     global arg_active_pool
     arg_active_pool = pool
@@ -73,15 +70,15 @@ def read_out_arguments(arguments):
     # =======================================================
 
     def print_arguments_n_exit():
-        print_separation_line()
+        print("--------------------------------")
         print_arguments()
-        print_separation_line()
+        print("--------------------------------")
         exit()
 
     # check if received only allowed command line arguments
     for string_element in arguments[1:]:
         if string_element not in allowed_all_arguments:
-            print_separation_line()
+            print("--------------------------------")
             print("Error: '" + string_element + "' is not a correct command line argument.")
             print_arguments_n_exit()
 
@@ -91,7 +88,7 @@ def read_out_arguments(arguments):
 
     # '-beta' and '-math' are not allowed as combination
     if '-beta' in arguments and '-math' in arguments:
-        print_separation_line()
+        print("--------------------------------")
         print("'-beta' and '-math' can not be used together")
         print_arguments_n_exit()
 
@@ -104,7 +101,7 @@ def read_out_arguments(arguments):
         # the arguments are in sys.argv[1] and following
 
     if len(arguments) < minimal_arg:
-        print_separation_line()
+        print("--------------------------------")
         print("Please provide at least one question pool as command line argument.")
         print_arguments_n_exit()
 
