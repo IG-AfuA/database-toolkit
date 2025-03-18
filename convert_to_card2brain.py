@@ -27,14 +27,14 @@ import sys
 import xlsxwriter
 
 # Project files:
-from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain, extract_image,
-                         math_signs_much_less_n_much_greater, remove_flaws_coming_from_json_source)
-     #FIXME Issue #12
+from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
+                         extract_image, math_signs_much_less_n_much_greater,
+                         remove_flaws_coming_from_json_source)  #FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
-from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool, dict_pool_arguments,
-                                 beta_test_exam_questions, get_active_pool)
+from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
+                               dict_pool_arguments, beta_test_exam_questions, get_active_pool)
 from toolkit_system import exit_with_line_info
 
 def shuffle(items, permutation):
@@ -45,11 +45,16 @@ def shuffle(items, permutation):
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
 def export(questions, pool : str):
+    # Sort the question pool by question_id
+    sorted_questions = sorted(questions, key=lambda x: x.question_id)
 
-    # for i,q in enumerate(questions):
+    # for q in sorted_questions:
     xmlx_row =  0
-    for q in questions:
+    for q in sorted_questions:
 
+        # When parameter '-beta' then check if the queston_id is
+        # in the list of beta test question (in onvert_argugments.py).
+        # IF not, ignore this question and go on with next question.
         if "-beta" in sys.argv:
             if not beta_test_exam_questions(q.question_id):
                 continue
@@ -60,7 +65,7 @@ def export(questions, pool : str):
         # looks weird when Card2Brain shuffles answers since "A" to "D" appears
         # in a strange order. We therefore only want to do that if necessary.
 
-        # --- BEGIN export ---
+        # --- BEGIN with preparing the export ---
 
         # Define a randomized order for the answers
         # and change then the order in an identical manner for answers and solutions:
@@ -116,7 +121,6 @@ def export(questions, pool : str):
 
             # if there is also 1 (one!) question image, it is now the time, to append it:
             if count_images == 1:
-                new_question_image = re.sub(r'/', '_', question_images[0])
                 image_col.append(img_tk.load(IMG_BASE_PATH + question_images[0]))
 
             # answer options each consist of one image:
@@ -188,9 +192,10 @@ def export(questions, pool : str):
 #FIXME DEV modus
 if len(sys.argv) < 2:
     sys.argv.append('-a24')
-    sys.argv.append('-e06')
+    # sys.argv.append('-e06')
     sys.argv.append('-e24')
-    sys.argv.append('-a07')
+    # sys.argv.append('-a07')
+    sys.argv.append('-beta')
 
 
 # Read out the command line arguments:
@@ -210,7 +215,7 @@ PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 # Separator
 print(' ')
 
-# Loop for every asked question pool
+# Loop for every question pool in the command line arguments
 for pool_argument in list_scheduled_pools:
 
     set_active_pool(pool_argument)
