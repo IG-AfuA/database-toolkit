@@ -132,6 +132,15 @@ def latex_to_utf8_subsuperscript(text: str):
             return ''.join([subscript_map[i] for i in text])
 
         text = match.group(0)
+
+        # Let's make a backup of the LaTex term before transforming
+        # superscript and subscript to utf8:
+        save_text = text
+
+        # Explanation of Regex syntax:
+        # https: // www.w3schools.com / python / python_regex.asp
+
+        # Superscript:
         text = re.sub(r'\^{([^{}]+)}', _latex_to_utf8_superscript, text)
         text = re.sub(r'\^(.)', _latex_to_utf8_superscript, text)
 
@@ -139,11 +148,19 @@ def latex_to_utf8_subsuperscript(text: str):
         # because subscript numbers are accepted in Card2Brain answer fields
         text = re.sub(r'\_(\d)', _latex_to_utf8_subscript, text)
 
+        # Only in question pool DLA-2024 exists:
+        # 1) '$\textrm{R}_1$' or '$\textrm{R}_2$' or '$\textrm{R}_3$' or '$\textrm{R}_4$'
+        # 2) '$\text{AP}_1$' or '$\text{AP}_2$' or '$\text{AP}_3$' or '$\text{AP}_4$'
+        # With following two pattern these terms can be transformed free of LaTex:
+        text = re.sub(r'\\textrm{R}', r'R', text)
+        text = re.sub(r'\\text{AP}', r'AP', text)
+
         if '\\' not in text and '_' not in text and '^' not in text:
             # String is latex-free now, so we can strip the dollars
             return text[1:-1]
         else:
-            return text
+            # keep the original LaTex term if a complete transformation was not possible:
+            return save_text
 
 
     return re.sub(r'\$(.*?)\$', _latex_to_utf8_subsuperscript, text)
