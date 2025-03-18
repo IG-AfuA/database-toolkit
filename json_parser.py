@@ -118,9 +118,13 @@ def latex_to_utf8_subsuperscript(text: str):
                 '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
                 'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ',
                 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ',
-                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '·'
+                'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ', '-': '⁻', ',': '_'
             }
-            # for comma using U+00B7 --> ',': '·' (used in DLA-2007-TA113)
+            # WORKAROUND
+            # In DLA-2007-TA113 is a comma in superscript as LaTex term.
+            # But a comma in superscript does not exist in unicode. Therefore
+            # in the map above a comma will be replaced by an underline.
+            # And because of the underline the whole term will stay in LaTex, see below.
 
             return ''.join([superscript_map[i] for i in text])
 
@@ -138,7 +142,7 @@ def latex_to_utf8_subsuperscript(text: str):
         save_text = text
 
         # Explanation of Regex syntax:
-        # https: // www.w3schools.com / python / python_regex.asp
+        # https://www.w3schools.com/python/python_regex.asp
 
         # Superscript:
         text = re.sub(r'\^{([^{}]+)}', _latex_to_utf8_superscript, text)
