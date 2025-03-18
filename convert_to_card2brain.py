@@ -29,7 +29,8 @@ import xlsxwriter
 # Project files:
 from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
                          extract_image, math_signs_much_less_n_much_greater,
-                         remove_flaws_coming_from_json_source)  #FIXME Issue #12
+                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac,
+                         latex_frac_to_dfrac) # FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
@@ -163,7 +164,8 @@ def export(questions, pool : str):
                 math_or_image_in_answer = True
                 for a1, a2 in zip(labels_new_order, answers_new_order):
                     question_text += '<br><br>'
-                    question_text += f'<strong>{a1}:</strong> {a2}'
+                    question_text += f'<strong>{a1}:</strong>&nbsp;&nbsp;&nbsp;{a2}' # 3 spaces between label and text are intentional
+                    print(question_text)
 
         # End of: if '<img ' in q.answer_0: / else:
 
@@ -193,10 +195,10 @@ def export(questions, pool : str):
 if len(sys.argv) < 2:
     sys.argv.append('-a24')
     # sys.argv.append('-e06')
-    sys.argv.append('-e24')
+    # sys.argv.append('-e24')
     # sys.argv.append('-a07')
     sys.argv.append('-beta')
-
+    sys.argv.append('-dfrac')
 
 # Read out the command line arguments:
 # -- Checking: are only expected arguments in the list?
@@ -275,6 +277,10 @@ for pool_argument in list_scheduled_pools:
     else:
         qp = json_parser2007()
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
+
+    # Experimental
+    if '-dfrac' in sys.argv:
+        qp.attach_text_processor(latex_frac_to_dfrac)
 
     # Parsing elements
     qp.attach_text_processor(latex_to_utf8)

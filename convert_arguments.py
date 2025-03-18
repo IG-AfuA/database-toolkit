@@ -11,7 +11,7 @@ dict_pool_arguments  = {
     "-a24":"DLA-2024",
 }
 
-allowed_service_arguments = ["-?", "-beta","-math", "-l"]
+allowed_service_arguments = ["-?", "-l", "-dfrac", "-beta","-math"]
 allowed_pool_arguments = []     # see commend below; source is dict_pool_arguments
 allowed_all_arguments = []      # see commend below
 list_scheduled_pools = []       # see commend below
@@ -19,16 +19,18 @@ arg_active_pool = ""
 # These variables will be filled initially in def read_out_arguments (see below)
 
 def print_arguments():
-    print("Possible command line arguments are:")
-    print("-?   : Is showing this overview of possible arguments")
-    print("-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany")
-    print("-a07 : Export question pool year 2007 for Advanced Licence from BNetzA Germany")
-    print("-e24 : Export question pool year 2024 for Novice Licence from BNetzA Germany")
-    print("-a24 : Export question pool year 2024 for Advanced Licence from BNetzA Germany")
+    print('Possible command line arguments are:')
+    print('-?   : Is showing this overview of possible arguments')
+    print('-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany')
+    print('-a07 : Export question pool year 2007 for Advanced Licence from BNetzA Germany')
+    print('-e24 : Export question pool year 2024 for Novice Licence from BNetzA Germany')
+    print('-a24 : Export question pool year 2024 for Advanced Licence from BNetzA Germany')
     print('-l   : Add link to "Lichtblicke" (not available for "Card2Brain")')
-    print("And only for beta testing: either '-beta' or '-math'")
-    print("-beta : Only some typical examples from the selected question pool will be exported")
-    print("-math : Only questions containing LaTex code will be exported")
+    print('And experimental:')
+    print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac"  ')
+    print('And only for beta testing: either "-beta" or "-math" ')
+    print('-beta : Only some typical examples from the selected question pool will be exported')
+    print('-math : Only questions containing LaTex code will be exported')
 
 def set_active_pool(pool : str):
     global arg_active_pool

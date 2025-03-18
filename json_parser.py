@@ -195,6 +195,10 @@ def to_card2brain(text:str):
 
     return re.sub(r'\$(.*?)\$', _latex_to_card2brainmath, text)
 
+# Experimental:
+def latex_frac_to_dfrac(latex_str:str):
+    return re.sub(r'\\frac', r'\\dfrac', latex_str)
+
 # This can be used for debugging
 def print_latex(text: str):
     inline_latex = r'\$(.*?)\$'
