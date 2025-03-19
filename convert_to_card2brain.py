@@ -52,8 +52,8 @@ def export(questions, pool : str):
     xmlx_row =  0
     for q in sorted_questions:
 
-        # When parameter '-beta' then check if the queston_id is
-        # in the list of beta test question (in onvert_argugments.py).
+        # When parameter '-beta' then check if the question_id is
+        # in the list of beta test question (in convert_arguments.py).
         # IF not, ignore this question and go on with next question.
         if "-beta" in sys.argv:
             if not beta_test_exam_questions(q.question_id):
@@ -175,12 +175,23 @@ def export(questions, pool : str):
             xmlx_row += 1
             # write a row in the xlsx-file:
             if math_or_image_in_answer:
+
+                # Some Latex term are to lang for the C2B app
+                # (in DLE-2006 2 questions and in DLA-2007 2 questions)
+                # Therefore: Divide long <span></span> terms in smaller ones
+                question_text = question_text.replace(r'+\text',r'\)</span> <span class="math-tex">\(\:+\:\text')
+                question_text = question_text.replace(r'-\text', r'\)</span> <span class="math-tex">\(\:-\:\text')
+                question_text = question_text.replace(r'·\text', r'\)</span> <span class="math-tex">\(\:·\:\text')
+
+                # Write the next row (with answers with math or/and images) into the Excel worksheet
                 worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
             else:
                 # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):
                 final_answer = []
                 for i in range(0,ANSWERS_PER_QUESTION):
                     final_answer.append(answers_new_order[i].replace('<br>',' —— ')) # best result in C2B app with ' —— '
+
+                # Write the next row (with only plain text answers) into the Excel worksheet
                 worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
 
     # end of 'for q in questions'
@@ -195,10 +206,10 @@ def export(questions, pool : str):
 
 #FIXME DEV modus
 if len(sys.argv) < 2:
+    sys.argv.append('-e06')
+    sys.argv.append('-a07')
+    sys.argv.append('-e24')
     sys.argv.append('-a24')
-    # sys.argv.append('-e06')
-    # sys.argv.append('-e24')
-    # sys.argv.append('-a07')
     sys.argv.append('-beta')
     sys.argv.append('-dfrac')
 
