@@ -147,6 +147,7 @@ def beta_test_exam_questions(question : str):
             "TB102",    # answers with Omega-sign
             "TB106",    # long answers
             "TB111",    # picture in question and long answers
+            "TB201",    # answers with <br> tags
             "TB207",    # answers with R_L and R_i
             "TB209",    # answers with << and >>
             "TB601",    # answers with subscript
@@ -159,7 +160,7 @@ def beta_test_exam_questions(question : str):
             "TC507",    # answers with image between text
             "TC511",    # big image in question; answers with 1,2,3
             "TC512",    # big image in question; answers with 1,2,3
-            "TC513",    # big image in question; answers with 1,2,3
+            "TC513",    # big image in question; answers with 1,2,3 and <br> tags
             "TC115",    # answers with big images
             "TC526",    # images in question and answer
             "TC601",    # answers with 1,2
@@ -171,6 +172,7 @@ def beta_test_exam_questions(question : str):
             "TD406",    # answers with 'sz' and v_u
             "TD605",
             "TE202",    # answers with math terms between text
+            "TF211",    # answers with <br> tags
             "TG101",    # question with big picture
             "TG111",    # question with big picture
             "TG223",    # question with big picture

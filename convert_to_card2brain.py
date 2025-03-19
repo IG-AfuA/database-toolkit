@@ -29,8 +29,7 @@ import xlsxwriter
 # Project files:
 from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
                          extract_image, math_signs_much_less_n_much_greater,
-                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac,
-                         latex_frac_to_dfrac) # FIXME Issue #12
+                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac) # FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
@@ -165,7 +164,6 @@ def export(questions, pool : str):
                 for a1, a2 in zip(labels_new_order, answers_new_order):
                     question_text += '<br><br>'
                     question_text += f'<strong>{a1}:</strong>&nbsp;&nbsp;&nbsp;{a2}' # 3 spaces between label and text are intentional
-                    print(question_text)
 
         # End of: if '<img ' in q.answer_0: / else:
 
@@ -179,7 +177,11 @@ def export(questions, pool : str):
             if math_or_image_in_answer:
                 worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
             else:
-                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],answers_new_order[0],solutions_new_order[1],answers_new_order[1],solutions_new_order[2],answers_new_order[2],solutions_new_order[3],answers_new_order[3],'','','','','',''])
+                # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):
+                final_answer = []
+                for i in range(0,ANSWERS_PER_QUESTION):
+                    final_answer.append(answers_new_order[i].replace('<br>',' —— ')) # best result in C2B app with ' —— '
+                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
 
     # end of 'for q in questions'
 
