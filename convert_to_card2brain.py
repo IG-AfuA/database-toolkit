@@ -35,7 +35,7 @@ from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for D
 import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
 from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
                                dict_pool_arguments, beta_test_exam_questions, get_active_pool)
-from toolkit_system import exit_with_line_info
+from toolkit_system import exit_with_line_info, dev_print
 
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
