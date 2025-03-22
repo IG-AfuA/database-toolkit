@@ -19,13 +19,14 @@ arg_active_pool = ""
 # These variables will be filled initially in def read_out_arguments (see below)
 
 def print_arguments():
+    print('Find detailed infos in the README.md file ;-) ')
     print('Possible command line arguments are:')
     print('-?   : Is showing this overview of possible arguments')
     print('-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany')
-    print('-a07 : Export question pool year 2007 for Advanced Licence from BNetzA Germany')
+    print('-a07 : Export question pool year 2007 for CEPT Licence from BNetzA Germany')
     print('-e24 : Export question pool year 2024 for Novice Licence from BNetzA Germany')
-    print('-a24 : Export question pool year 2024 for Advanced Licence from BNetzA Germany')
-    print('-l   : Add link to "Lichtblicke" (not available for "Card2Brain")')
+    print('-a24 : Export question pool year 2024 for CEPT Licence from BNetzA Germany')
+    print('-l   : Add link to "Lichtblicke" (only for "-e06" and "-a07")(not available for "Card2Brain")')
     print('And experimental:')
     print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac"  ')
     print('And only for beta testing: either "-beta" or "-math" ')
