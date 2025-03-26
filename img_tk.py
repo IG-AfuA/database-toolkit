@@ -5,7 +5,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 # font path
-font_path = 'library/fonts/dejavu-sans-fonts/DejaVuSans.ttf'
+font_path = 'input-files/fonts/DejaVuSans.ttf'
 
 #inital font size, can be changed with set_font_size(i)
 font_size = 36
