@@ -32,7 +32,7 @@ from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2br
                          remove_flaws_coming_from_json_source, latex_frac_to_dfrac) # FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
-import img_tk # Toolkit for the images (embed labels to images, stacking of images, ...)
+import toolkit_images as tk_img # Toolkit for the images (embed labels to images, stacking of images, ...)
 from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
                                dict_pool_arguments, beta_test_exam_questions, get_active_pool)
 from toolkit_system import exit_with_line_info, dev_print
@@ -111,7 +111,7 @@ def export(questions, pool : str):
             count_images += len(question_images)
             new_question_image = re.sub(r'/', '_', question_images[0])
             for img_nr in range(len(question_images)):
-                image_col.append(img_tk.load(IMG_BASE_PATH+question_images[img_nr]))
+                image_col.append(tk_img.load(IMG_BASE_PATH+question_images[img_nr]))
 
         # ---------------
 
@@ -121,29 +121,29 @@ def export(questions, pool : str):
 
             # if there is also 1 (one!) question image, it is now the time, to append it:
             if count_images == 1:
-                image_col.append(img_tk.load(IMG_BASE_PATH + question_images[0]))
+                image_col.append(tk_img.load(IMG_BASE_PATH + question_images[0]))
 
             # answer options each consist of one image:
             math_or_image_in_answer = True
             count_images += 4
 
             # Separator between question (text with/without images) and answer options:
-            image_col.append(img_tk.render_text('Vorgeschlagene Antworten:'))
+            image_col.append(tk_img.render_text('Vorgeschlagene Antworten:'))
 
             # grouping all infos to one picture
             for label,answer in zip(labels_new_order,answers_new_order):
-                image_row = [img_tk.render_text(label),]
+                image_row = [tk_img.render_text(label),]
                 image_tags = re.findall(image_tag, answer)
                 assert(len(image_tags) == 1) # check if allways one image per answer option
                 match = re.search(image_tag, answer)
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
-                image_row.append(img_tk.render_text(prefix))
-                image_row.append(img_tk.load(IMG_BASE_PATH+image_tags[0]))
-                image_row.append(img_tk.render_text(postfix))
-                image_col.append(img_tk.tile_images_horizontally(image_row))
+                image_row.append(tk_img.render_text(prefix))
+                image_row.append(tk_img.load(IMG_BASE_PATH+image_tags[0]))
+                image_row.append(tk_img.render_text(postfix))
+                image_col.append(tk_img.tile_images_horizontally(image_row))
 
-            answer_image = img_tk.tile_images_vertically(image_col)
+            answer_image = tk_img.tile_images_vertically(image_col)
             new_question_image = f'{pool}_{q.question_id}_a_stacked.png'
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
 
@@ -153,7 +153,7 @@ def export(questions, pool : str):
                 new_question_image = re.sub(r'/', '_', question_images[0])
                 shutil.copyfile(IMG_BASE_PATH + question_images[0], OUTPUT_IMG_PATH + new_question_image)
             elif count_images > 1:
-                answer_image = img_tk.tile_images_vertically(image_col)
+                answer_image = tk_img.tile_images_vertically(image_col)
                 new_question_image = f'{pool}_{q.question_id}_q_stacked.png'
                 answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
 
@@ -236,10 +236,10 @@ for pool_argument in list_scheduled_pools:
     set_active_pool(pool_argument)
 
     if pool_argument in ['-e06','-a07']:      # Is it one of these two pools?
-        img_tk.set_font_size(24)
+        tk_img.set_font_size(24)
         IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
     elif pool_argument in ['-e24','-a24']:    # or is it one of these two pools?
-        img_tk.set_font_size(36)
+        tk_img.set_font_size(36)
         IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
     else:
         IMG_BASE_PATH = 'ERROR'
