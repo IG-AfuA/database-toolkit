@@ -1,3 +1,6 @@
 [submodule "afu-group-trainer"]
 	path = input-files/afu-group-trainer
 	url = https://github.com/ccoors/afu-group-trainer
+[submodule "input-files/50ohm-pocket"]
+	path = input-files/50ohm-pocket
+	url = https://github.com/DARC-e-V/50ohm-pocket
