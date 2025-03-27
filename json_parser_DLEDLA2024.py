@@ -44,7 +44,7 @@ def print_latex(text: str):
 
 
 # Structure of the JSON files in
-# input-files/50ohm-pocket-main/assets/questions/
+# input-files/50ohm-pocket/assets/questions/
 #
 # - "sections" = [
 #    - "sections" = [
@@ -66,12 +66,12 @@ def print_latex(text: str):
 
 class json_parser:
     def __init__(self):
-        fh = open('input-files/50ohm-pocket-main/assets/questions/E.json')
+        fh = open('input-files/50ohm-pocket/assets/questions/E.json')
         question_pool = json.load(fh)
         self.novice_tree = question_pool['sections']
         fh.close()
 
-        fh = open('input-files/50ohm-pocket-main/assets/questions/A.json')
+        fh = open('input-files/50ohm-pocket/assets/questions/A.json')
         question_pool = json.load(fh)
         self.cept_tree = question_pool['sections']
         fh.close()

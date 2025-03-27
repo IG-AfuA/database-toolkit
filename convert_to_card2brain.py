@@ -7,9 +7,10 @@
 
 # Check before running the tool:
 # Following file paths must exist in your project folder;
-# a) always: /library/fonts/dejavu-sans-fonts/DejaVuSans.ttf
+# a) always: /input-files/fonts/DejaVuSans.ttf
 # b) for DLE2006 and DLA2007: /input-files/afu-group-trainer/... with the files
-# c) for DLE2024 and DLA2024: /input-files/50ohm-pocket-main/... with the files
+# c) for DLE2024 and DLA2024: /input-files/50ohm-pocket/... with the files
+# d) for DLE2024 and DLA2024: /input-files/50ohm-pocket__images-to-png-converted/ with the files
 #
 # The output files will be placed in a file folder named
 # /output-files/ in your project folder.
@@ -240,7 +241,7 @@ for pool_argument in list_scheduled_pools:
         IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
     elif pool_argument in ['-e24','-a24']:    # or is it one of these two pools?
         tk_img.set_font_size(36)
-        IMG_BASE_PATH = 'input-files/50ohm-pocket_images-to-png-converted/'
+        IMG_BASE_PATH = 'input-files/50ohm-pocket__images-converted-to-png/'
     else:
         IMG_BASE_PATH = 'ERROR'
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
