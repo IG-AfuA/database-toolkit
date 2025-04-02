@@ -1,4 +1,4 @@
-from toolkit_system import exit_with_line_info
+from toolkit_system import exit_with_line_info, dev_print
 
 # Usage of this dictionary:
 # Keys = allowed command line parameters
@@ -7,11 +7,10 @@ from toolkit_system import exit_with_line_info
 dict_pool_arguments  = {
     "-e06":"DLE-2006",
     "-a07":"DLA-2007",
-    "-e24":"DLE-2024",
+    "-e24":"DLE-2024", # NE-Katalog
     "-a24":"DLA-2024",
 }
-
-allowed_service_arguments = ["-?", "-l", "-dfrac", "-beta","-math"]
+allowed_service_arguments = ["-?", "-c", "-l", "-dfrac", "-beta", "-math"]
 allowed_pool_arguments = []     # see commend below; source is dict_pool_arguments
 allowed_all_arguments = []      # see commend below
 list_scheduled_pools = []       # see commend below
@@ -24,11 +23,11 @@ def print_arguments():
     print('-?   : Is showing this overview of possible arguments')
     print('-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany')
     print('-a07 : Export question pool year 2007 for CEPT Licence from BNetzA Germany')
-    print('-e24 : Export question pool year 2024 for Novice Licence from BNetzA Germany')
+    print('-e24 : Export question pool year 2024 for Novice Licence (N+E) from BNetzA Germany')
     print('-a24 : Export question pool year 2024 for CEPT Licence from BNetzA Germany')
+    print('-c   : Replace the category names according to list in folder input-files')
     print('-l   : Add link to "Lichtblicke" (only for "-e06" and "-a07")(not available for "Card2Brain")')
-    print('And experimental:')
-    print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac"  ')
+    print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac" ')
     print('And only for beta testing: either "-beta" or "-math" ')
     print('-beta : Only some typical examples from the selected question pool will be exported')
     print('-math : Only questions containing LaTex code will be exported')
@@ -51,6 +50,11 @@ def read_out_arguments(arguments):
     global list_scheduled_pools
     global arg_active_pool
 
+    def print_arguments_n_exit():
+        print("--------------------------------")
+        print_arguments()
+        print("--------------------------------")
+        exit()
 
     # PART ONE : Initialize all the variables
     # =======================================
@@ -68,15 +72,12 @@ def read_out_arguments(arguments):
         if i in allowed_pool_arguments:
             list_scheduled_pools.append(i)
 
-
     # PART TWO : Check, if the received arguments are correct
     # =======================================================
 
-    def print_arguments_n_exit():
-        print("--------------------------------")
-        print_arguments()
-        print("--------------------------------")
-        exit()
+    # check for the '-?' argument
+    if '-?' in arguments:
+        print_arguments_n_exit()
 
     # check if received only allowed command line arguments
     for string_element in arguments[1:]:
@@ -84,10 +85,6 @@ def read_out_arguments(arguments):
             print("--------------------------------")
             print("Error: '" + string_element + "' is not a correct command line argument.")
             print_arguments_n_exit()
-
-    # check for the '-?' argument
-    if '-?' in arguments:
-        print_arguments_n_exit()
 
     # '-beta' and '-math' are not allowed as combination
     if '-beta' in arguments and '-math' in arguments:
