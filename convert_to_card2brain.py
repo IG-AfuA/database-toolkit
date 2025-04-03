@@ -1,16 +1,17 @@
 # Mat says:
 # FIXME This code needs major cleanup before it can be merged.
 
-# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-beta|-math]
+# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-c] [-l] [-t] [-dfrac] [-beta|-math]
 # Parameters '-beta' and '-math' is only for beta testing
 # For more info, use parameter '-?'
 
 # Check before running the tool:
 # Following file paths must exist in your project folder;
-# a) always: /input-files/fonts/DejaVuSans.ttf
-# b) for DLE2006 and DLA2007: /input-files/afu-group-trainer/... with the files
-# c) for DLE2024 and DLA2024: /input-files/50ohm-pocket/... with the files
-# d) for DLE2024 and DLA2024: /input-files/50ohm-pocket__images-to-png-converted/ with the files
+# a) always:  /input-files/fonts/DejaVuSans.ttf
+# b) for DLE2006 and DLA2007:  /input-files/afu-group-trainer/... with the files
+# c) for DL-2024:  /input-files/50ohm-pocket/... with the files
+# d) for DL-2024:  /input-files/50ohm-pocket__images-to-png-converted/ with the files
+# e) for DL-2024:  /input-files/new-category-names/ with the files (if you use parameter '-c')
 #
 # The output files will be placed in a file folder named
 # /output-files/ in your project folder.
@@ -33,10 +34,11 @@ from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2br
                          remove_flaws_coming_from_json_source, latex_frac_to_dfrac) # FIXME Issue #12
 from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
-import toolkit_images as tk_img # Toolkit for the images (embed labels to images, stacking of images, ...)
 from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
                                dict_pool_arguments, beta_test_exam_questions, get_active_pool)
+import toolkit_images as tk_img # Toolkit for the images (embed labels to images, stacking of images, ...)
 from toolkit_system import exit_with_line_info, dev_print
+from toolkit_categories import read_new_categories_from_xls
 
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
@@ -46,6 +48,7 @@ def shuffle(items, permutation):
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
 def export(questions, pool : str):
+
     # Sort the question pool by question_id
     sorted_questions = sorted(questions, key=lambda x: x.question_id)
 
@@ -114,7 +117,7 @@ def export(questions, pool : str):
             for img_nr in range(len(question_images)):
                 image_col.append(tk_img.load(IMG_BASE_PATH+question_images[img_nr]))
 
-        # ---------------
+        # End of: if question_images ... / elif len(question_images) ...
 
         if '<img ' in q.answer_0:
             # if statement only checks answer_0 because either all four or none of the four
@@ -172,8 +175,47 @@ def export(questions, pool : str):
         info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
 
         # In case of parameter '-math' only export questions containing a LaTex term:
-        if "-math" not in sys.argv or "<span" in question_text:
+
+        # Normally every question shall be exported:
+        export_this_question = True
+
+        # With command line parameter '-math' export
+        # only question with a html tag for latex terms
+        if '-math' in sys.argv:
+            if '<span' not in question_text:
+                export_this_question =  False
+
+        # Don't export exam question when not in chapter 'Technische Kenntnisse'
+        if '-e24' == get_active_pool():
+            # Of the sources currently used for exam questions, only the DLE-2004 question pool
+            # contains questions on regulations and operating, which now need to be sorted out.
+            if q.question_id[0] in ['V', 'B']:
+                # V = exam question in chapter 'Vorschriften'
+                # B = exam question in chapter 'Betriebstechnik'
+                export_this_question = False
+
+        if export_this_question:
             xmlx_row += 1
+
+            # Category name - and sorting_id according to category name
+            if '-e24' == get_active_pool() and q.question_id[0] == 'N':  # exam level entry licence
+                sort_n_e_a = '1'
+            elif get_active_pool() in ['-e06', '-e24']:    # exam level novice licence
+                sort_n_e_a = '2'
+            else:                                           # exam level cept licence
+                sort_n_e_a = '3'
+
+            if '-c' in sys.argv:
+                category_name = new_categories.get(q.question_id[:-2])
+                if category_name is None:
+                    exit_with_line_info("In '" + NEW_CATEGORY_XLSX + "' fehlt die Kategorie für den Code '" + q.question_id[:-2] +"' (Question-ID '" + q.question_id +  "'). ")
+
+                sorted_question_id = category_name[:4] + '_' + sort_n_e_a + '_' + q.question_id
+
+            else:
+                category_name = q.category
+                sorted_question_id = sort_n_e_a + '_' + q.question_id
+
             # write a row in the xlsx-file:
             if math_or_image_in_answer:
 
@@ -185,7 +227,7 @@ def export(questions, pool : str):
                 question_text = question_text.replace(r'·\text', r'\)</span> <span class="math-tex">\(\:·\:\text')
 
                 # Write the next row (with answers with math or/and images) into the Excel worksheet
-                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
+                worksheet.write_row(xmlx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
             else:
                 # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):
                 final_answer = []
@@ -193,13 +235,13 @@ def export(questions, pool : str):
                     final_answer.append(answers_new_order[i].replace('<br>',' —— ')) # best result in C2B app with ' —— '
 
                 # Write the next row (with only plain text answers) into the Excel worksheet
-                worksheet.write_row(xmlx_row,0,[q.question_id,q.category,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
+                worksheet.write_row(xmlx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
 
-    # end of 'for q in questions'
+    # end of: for q in questions
 
     print(str(xmlx_row) + " rows exported for " + get_active_pool())
 
-# end of def export
+# end of: def export
 
 # ----------------------------------------------------------
 # End of def - main code starts
@@ -213,6 +255,7 @@ if len(sys.argv) < 2:
     sys.argv.append('-a24')
     sys.argv.append('-beta')
     sys.argv.append('-dfrac')
+    # sys.argv.append('-c')
 
 # Read out the command line arguments:
 # -- Checking: are only expected arguments in the list?
@@ -249,6 +292,19 @@ for pool_argument in list_scheduled_pools:
     if not os.path.exists(IMG_BASE_PATH):
         exit_with_line_info('path to input files does not exist')
 
+    # Set path, file name and worksheet for new category names:
+    NEW_CATEGORY_PATH = 'input-files/new-category-names/'
+    NEW_CATEGORY_XLSX = dict_pool_arguments.get(get_active_pool()) + '-new-category-names.xlsx'
+    NEW_CATEGORY_SHEET = 'Kategorie-Namen'
+    new_categories = {}
+
+    # Read the new categories (Dictionary):
+    if '-c' in sys.argv:
+        if not os.path.exists(NEW_CATEGORY_PATH):
+            exit_with_line_info("Path to '" + NEW_CATEGORY_PATH +"' does not exist (used with parameter '-c') ")
+
+        new_categories = read_new_categories_from_xls(NEW_CATEGORY_PATH,NEW_CATEGORY_XLSX, NEW_CATEGORY_SHEET)
+
     # The name of the folder for the output data can be
     # chosen freely. It is created in the project folder.
     OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + dict_pool_arguments.get(get_active_pool()) + '/'
@@ -258,6 +314,16 @@ for pool_argument in list_scheduled_pools:
 
     # DO NOT CHANGE. Card2Brain needs exactly this subfolder with exact this name.
     OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/'
+
+    # Choose the correct parser
+    if pool_argument in ['-e06','-a07']:
+        qp = json_parser2007()
+    elif pool_argument in ['-e24','-a24']:
+        qp = json_parser2024()
+        qp.attach_text_processor(remove_flaws_coming_from_json_source)
+    else:
+        qp = json_parser2007() # qp assignment just for stopping PyCharm annoying me with an error message.
+        exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
     # Checking whether the folder path with all the required subfolders
     # already exists. If not, it will be created.
@@ -282,17 +348,6 @@ for pool_argument in list_scheduled_pools:
     #  Links of images in the JSON file have this character sequence:
     image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
 
-    # Choose the correct parser
-    if pool_argument in ['-e06','-a07']:
-        qp = json_parser2007()
-    elif pool_argument in ['-e24','-a24']:
-        qp = json_parser2024()
-        qp.attach_text_processor(remove_flaws_coming_from_json_source)
-    else:
-        qp = json_parser2007()
-        exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
-
-    # Experimental
     if '-dfrac' in sys.argv:
         qp.attach_text_processor(latex_frac_to_dfrac)
 
@@ -303,6 +358,7 @@ for pool_argument in list_scheduled_pools:
     if '-a07' in sys.argv:
         qp.attach_text_processor(math_signs_much_less_n_much_greater)
 
+    # Generate the Excel file and image folder for Card2Brain:
     if pool_argument in ['-e06','-e24']: # novice licence question pools
         export(qp.novice_questions(), 'HB3')
     elif pool_argument in ['-a07','-a24']: # cept licence question pools
@@ -317,3 +373,5 @@ for pool_argument in list_scheduled_pools:
 print("Mission accomplished for the arguments " + str(sys.argv[1:]))
 if '-l' in sys.argv:
     print("Argument '-l' (Lichtblicke) is not supported by the Card2Brain app.")
+print('Recommendation:')
+print('Sort the generated Excel files by the first column before importing them into Card2Brain.')
