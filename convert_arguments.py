@@ -21,12 +21,13 @@ def print_arguments():
     print('Find detailed infos in the README.md file ;-) ')
     print('Possible command line arguments are:')
     print('-?   : Is showing this overview of possible arguments')
-    print('-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany')
-    print('-a07 : Export question pool year 2007 for CEPT Licence from BNetzA Germany')
-    print('-e24 : Export question pool year 2024 for Novice Licence (N+E) from BNetzA Germany')
-    print('-a24 : Export question pool year 2024 for CEPT Licence from BNetzA Germany')
+    print('-e06 : Export question pool year 2006 for Novice Licence from BNetzA Germany *')
+    print('-a07 : Export question pool year 2007 for CEPT Licence from BNetzA Germany *')
+    print('-e24 : Export question pool year 2024 for Novice Licence (N+E) from BNetzA Germany *')
+    print('-a24 : Export question pool year 2024 for UPGRADE to CEPT Licence from BNetzA Germany')
+    print('       * = only chapter "Technische Kenntnisse" ')
     print('-c   : Replace the category names according to list in folder input-files')
-    print('-l   : Add link to "Lichtblicke" (only for "-e06" and "-a07")(not available for "Card2Brain")')
+    print('-l   : Add link to "Lichtblicke" (only for "-e06" and "-a07")(not available for "Card2Brain") ')
     print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac" ')
     print('And only for beta testing: either "-beta" or "-math" ')
     print('-beta : Only some typical examples from the selected question pool will be exported')
@@ -75,6 +76,14 @@ def read_out_arguments(arguments):
     # PART TWO : Check, if the received arguments are correct
     # =======================================================
 
+    # check if received at least one command line argument
+    if len(arguments) <2:
+        # sys.argv[0] contains path and script name
+        # the arguments are in sys.argv[1] and following
+        print("--------------------------------")
+        print("Please provide at least one command line argument.")
+        print_arguments_n_exit()
+
     # check for the '-?' argument
     if '-?' in arguments:
         print_arguments_n_exit()
@@ -92,15 +101,12 @@ def read_out_arguments(arguments):
         print("'-beta' and '-math' can not be used together")
         print_arguments_n_exit()
 
-    # check if at least 1 argument defines a question pool
-    if '-beta' in arguments or '-math' in arguments:
-        minimal_arg = 3
-    else:
-        minimal_arg = 2
-        # sys.argv[0] contains path and script name
-        # the arguments are in sys.argv[1] and following
-
-    if len(arguments) < minimal_arg:
+    # check if at least 1 argument defines a question pool #FIXME
+    count_qp = 0
+    for string_element in arguments[1:]:
+        if string_element in list_scheduled_pools:
+            count_qp += 1
+    if count_qp == 0:
         print("--------------------------------")
         print("Please provide at least one question pool as command line argument.")
         print_arguments_n_exit()
