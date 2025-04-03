@@ -14,7 +14,10 @@ from toolkit_system import exit_with_line_info, dev_print
 def read_new_categories_from_xls(xls_path_name, xls_file_name, xls_sheet_name) -> dict:
 
     # Open the Excel file:
-    workbook = openpyxl.load_workbook(xls_path_name + xls_file_name)
+    try:
+        workbook = openpyxl.load_workbook(xls_path_name + xls_file_name)
+    except OSError as e:
+        exit_with_line_info("Could not open '" + xls_path_name + xls_file_name + "' ")
 
     # Open the sheet in the Excel file:
     worksheet = workbook[xls_sheet_name]
