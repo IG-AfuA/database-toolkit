@@ -28,6 +28,10 @@ BASE_URL = 'https://classmarker.example.com/static/'
 assert(BASE_URL.startswith('https://'))
 assert(BASE_URL.endswith('/'))
 
+# ===================================
+# BEGIN AUSLAGERN
+# ===================================
+
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
 
@@ -241,6 +245,10 @@ def extract_image(text: str):
 
 def prefix_static_image_path(text: str):
     return re.sub(r'<img src="(.*?)">', r'<img src="/static/img/\1">', text)
+
+# ===================================
+# END AUSLAGERN
+# ===================================
 
 class json_parser:
     def __init__(self):

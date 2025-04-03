@@ -7,6 +7,10 @@ import json
 from dataclasses import dataclass
 import re
 
+# Project files:
+from json_parser import eszett_to_ss #FIXME Issue 12
+
+
 # TODO:
 # Check if the following still holds for the 2024 version of the catalog
 # - Translate $>>$ and $<<$
@@ -27,6 +31,11 @@ BASE_URL = 'https://classmarker.example.com/static/'
 assert(BASE_URL.startswith('https://'))
 assert(BASE_URL.endswith('/'))
 
+# ===================================
+# BEGIN AUSLAGERN
+# ===================================
+"""
+
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
 
@@ -41,6 +50,12 @@ def print_latex(text: str):
     for eq in eqs:
         print(eq)
     return text
+
+"""
+# ===================================
+# END AUSLAGERN
+# ===================================
+
 
 
 # Structure of the JSON files in
@@ -66,7 +81,7 @@ def print_latex(text: str):
 
 class json_parser:
     def __init__(self):
-        fh = open('input-files/50ohm-pocket/assets/questions/E.json')
+        fh = open('input-files/50ohm-pocket/assets/questions/NE.json')
         question_pool = json.load(fh)
         self.novice_tree = question_pool['sections']
         fh.close()
