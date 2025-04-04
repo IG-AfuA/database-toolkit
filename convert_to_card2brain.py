@@ -148,17 +148,20 @@ def export(questions, pool : str):
                 image_col.append(tk_img.tile_images_horizontally(image_row))
 
             answer_image = tk_img.tile_images_vertically(image_col)
-            new_question_image = f'{pool}_{q.question_id}_a_stacked.png'
+            new_question_image = f'{q.question_id}_a_stacked.png'
+            new_question_image = dict_pool_arguments.get(get_active_pool()) + "_" + new_question_image
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
 
         else: # No pictures in answers
 
             if count_images == 1:
                 new_question_image = re.sub(r'/', '_', question_images[0])
+                new_question_image = dict_pool_arguments.get(get_active_pool()) + "_" + new_question_image
                 shutil.copyfile(IMG_BASE_PATH + question_images[0], OUTPUT_IMG_PATH + new_question_image)
             elif count_images > 1:
                 answer_image = tk_img.tile_images_vertically(image_col)
-                new_question_image = f'{pool}_{q.question_id}_q_stacked.png'
+                new_question_image = f'{q.question_id}_q_stacked.png'
+                new_question_image = dict_pool_arguments.get(get_active_pool()) + "_" + new_question_image
                 answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
 
             if '<span class="math-tex">' in q.answer_0 or '<span class="math-tex">' in q.answer_1 or '<span class="math-tex">' in q.answer_2 or '<span class="math-tex">' in q.answer_3:
