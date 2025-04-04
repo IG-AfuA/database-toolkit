@@ -210,7 +210,7 @@ def export(questions, pool : str):
                 if category_name is None:
                     exit_with_line_info("In '" + NEW_CATEGORY_XLSX + "' fehlt die Kategorie für den Code '" + q.question_id[:-2] +"' (Question-ID '" + q.question_id +  "'). ")
 
-                sorted_question_id = category_name[:4] + '_' + sort_n_e_a + '_' + q.question_id
+                sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + q.question_id
 
             else:
                 category_name = q.category
@@ -253,9 +253,10 @@ if len(sys.argv) < 2:
     sys.argv.append('-a07')
     sys.argv.append('-e24')
     sys.argv.append('-a24')
-    sys.argv.append('-beta')
-    sys.argv.append('-dfrac')
     # sys.argv.append('-c')
+    sys.argv.append('-dfrac')
+    # sys.argv.append('-beta')
+    # sys.argv.append('-math')
 
 # Read out the command line arguments:
 # -- Checking: are only expected arguments in the list?
