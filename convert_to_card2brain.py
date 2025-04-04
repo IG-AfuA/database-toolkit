@@ -240,7 +240,20 @@ def export(questions, pool : str):
                 # Write the next row (with only plain text answers) into the Excel worksheet
                 worksheet.write_row(xmlx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
 
-    # end of: for q in questions
+            # end of: if math_or_image_in_answer:
+
+            if new_question_image != "":
+                try:
+                    shutil.copyfile(IMAGE_REPLACEMENT_PATH + new_question_image, OUTPUT_IMG_PATH + new_question_image)
+                except:
+                    pass
+                    # There is no replacement image available.
+                    # So the original image will be used, which
+                    # is already exported (see code above).
+
+            # end of: if new_question_image != "":
+        # end of: if export_this_question:
+    # end of: for q in questions:
 
     print(str(xmlx_row) + " rows exported for " + get_active_pool())
 
@@ -275,7 +288,11 @@ ANSWERS_PER_QUESTION = 4
 # Generate a list of all possible tuple combinations:
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
-# Separator
+# If a original image should be replaced, the new image has to be in this path
+# and need the same name after been exported (see dev export, var new_image_name):
+IMAGE_REPLACEMENT_PATH = "input-files/new-images-as-replacement/"
+
+# Separator on console output
 print(' ')
 
 # Loop for every question pool in the command line arguments
