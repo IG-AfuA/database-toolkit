@@ -10,7 +10,7 @@ dict_pool_arguments  = {
     "-e24":"DLE-2024", # NE-Katalog
     "-a24":"DLA-2024",
 }
-allowed_service_arguments = ["-?", "-c", "-l", "-dfrac", "-beta", "-math"]
+allowed_service_arguments = ["-?", "-a", "-c", "-l", "-dfrac", "-beta", "-math"]
 allowed_pool_arguments = []     # see commend below; source is dict_pool_arguments
 allowed_all_arguments = []      # see commend below
 list_scheduled_pools = []       # see commend below
@@ -26,6 +26,7 @@ def print_arguments():
     print('-e24 : Export question pool year 2024 for Novice Licence (N+E) from BNetzA Germany *')
     print('-a24 : Export question pool year 2024 for UPGRADE to CEPT Licence from BNetzA Germany')
     print('       * = only chapter "Technische Kenntnisse" ')
+    print('-a   : Export all selected question pool into the same Excel file')
     print('-c   : Replace the category names according to list in folder input-files')
     print('-l   : Add link to "Lichtblicke" (only for "-e06" and "-a07")(not available for "Card2Brain") ')
     print('-dfrac : LaTex terms with "frac" will be transformed to "dfrac" ')
@@ -227,7 +228,7 @@ def beta_test_exam_questions(question : str):
             "AB104",    # answers with long texts
             "AB208",    # answers with omega signs
             "AC405",    # 2 images in question and 1 per answer #FIXME question images in 1 file
-            "AC406",    # 2 images in question and 1 per answer #FIXME question images in 1 filer
+            "AC406",    # 2 images in question and 1 per answer #FIXME question images in 1 file
             "AC522",    # question with originally 'kOhm'
             "AC523",    # question with originally with 'm\Omega'
             "AD109",    # question with image in landscape format
