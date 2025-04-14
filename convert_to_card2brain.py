@@ -1,7 +1,7 @@
 # Mat says:
 # FIXME This code needs major cleanup before it can be merged.
 
-# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-c] [-l] [-t] [-dfrac] [-beta|-math]
+# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-c] [-l] [-s] [-dfrac] [-beta|-math]
 # Parameters '-beta' and '-math' is only for beta testing
 # For more info, use parameter '-?'
 
@@ -47,13 +47,15 @@ def shuffle(items, permutation):
     # but identical 'permutation', the order will be changed identically each time.
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
-def export(questions, pool : str):
+def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
+
+    global xlsx_row
 
     # Sort the question pool by question_id
     sorted_questions = sorted(questions, key=lambda x: x.question_id)
 
     # for q in sorted_questions:
-    xmlx_row =  0
+    rows_per_pool = 0
     for q in sorted_questions:
 
         # When parameter '-beta' then check if the question_id is
@@ -174,9 +176,6 @@ def export(questions, pool : str):
 
         # End of: if '<img ' in q.answer_0: / else:
 
-        # Text for field 'Ergänzung Antwort' in the XLSX file:
-        info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
-
         # In case of parameter '-math' only export questions containing a LaTex term:
 
         # Normally every question shall be exported:
@@ -198,7 +197,11 @@ def export(questions, pool : str):
                 export_this_question = False
 
         if export_this_question:
-            xmlx_row += 1
+            xlsx_row += 1       # row in the Excel file, needed for the writing into the Excel file
+            rows_per_pool += 1  # count for each question pool separately; needed just as info
+
+            # Text for field 'Ergänzung Antwort' in the XLSX file:
+            info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
 
             # Category name - and sorting_id according to category name
             if '-e24' == get_active_pool() and q.question_id[0] == 'N':  # exam level entry licence
@@ -213,7 +216,7 @@ def export(questions, pool : str):
                 if category_name is None:
                     exit_with_line_info("In '" + NEW_CATEGORY_XLSX + "' fehlt die Kategorie für den Code '" + q.question_id[:-2] +"' (Question-ID '" + q.question_id +  "'). ")
 
-                sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + q.question_id
+                sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + dict_pool_arguments.get(get_active_pool()) + '_' + q.question_id
 
             else:
                 category_name = q.category
@@ -230,7 +233,7 @@ def export(questions, pool : str):
                 question_text = question_text.replace(r'·\text', r'\)</span> <span class="math-tex">\(\:·\:\text')
 
                 # Write the next row (with answers with math or/and images) into the Excel worksheet
-                worksheet.write_row(xmlx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
+                worksheet.write_row(xlsx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
             else:
                 # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):
                 final_answer = []
@@ -238,7 +241,7 @@ def export(questions, pool : str):
                     final_answer.append(answers_new_order[i].replace('<br>',' —— ')) # best result in C2B app with ' —— '
 
                 # Write the next row (with only plain text answers) into the Excel worksheet
-                worksheet.write_row(xmlx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
+                worksheet.write_row(xlsx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
 
             # end of: if math_or_image_in_answer:
 
@@ -255,9 +258,47 @@ def export(questions, pool : str):
         # end of: if export_this_question:
     # end of: for q in questions:
 
-    print(str(xmlx_row) + " rows exported for " + get_active_pool())
+    print(str(rows_per_pool) + " rows exported for " + get_active_pool())
 
 # end of: def export
+
+def open_close_excel(open_file : bool, first_call = False):
+
+    global workbook
+    global worksheet
+    global xlsx_row
+
+    if open_file:
+        if not first_call and '-a' not in sys.argv:
+            # close Excel file
+            workbook.close()
+            print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
+
+        if first_call or '-a' not in sys.argv:
+            # Open the Excel file in the output file folder:
+            workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+
+            # Open a worksheet in the Excel file:
+            worksheet = workbook.add_worksheet('Fragen')
+
+            # Write row[0], the title row, in the worksheet of the Excel file:
+            title = (
+            'Id', 'Stapel', '', 'Frage-Typ', 'Frage', 'Antwort', 'Instruction', 'Ergänzung F', 'Phonetics F',
+            'Beispielsatz F', 'Audio F', 'Bild F', 'Ergänzung A', 'Phonetics A', 'Beispielsatz A', 'Audio A',
+            'Bild A', 'MCA1 Correct', 'MCA1 Text', 'MCA2 Correct', 'MCA2 Text', 'MCA3 Correct', 'MCA3 Text',
+            'MCA4 Correct', 'MCA4 Text', 'MCA5 Correct', 'MCA5 Text', 'Copyright Image F', 'Copyright Image A',
+            'Copyright Audio F', 'Copyright Audio A')
+            title_format = workbook.add_format({'bold': True})
+            worksheet.write_row(0, 0, title, title_format)
+
+            xlsx_row = 0
+        # end of: if first_call or '-a' not in sys.argv
+
+    else:
+        # close Excel file
+        workbook.close()
+        print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
+# end of: dev open_close_excel
 
 # ----------------------------------------------------------
 # End of def - main code starts
@@ -266,10 +307,11 @@ def export(questions, pool : str):
 #FIXME DEV modus
 if len(sys.argv) < 2:
     sys.argv.append('-e06')
-    sys.argv.append('-a07')
+    # sys.argv.append('-a07')
     sys.argv.append('-e24')
-    sys.argv.append('-a24')
-    # sys.argv.append('-c')
+    # sys.argv.append('-a24')
+    sys.argv.append('-a')
+    sys.argv.append('-c')
     sys.argv.append('-dfrac')
     # sys.argv.append('-beta')
     # sys.argv.append('-math')
@@ -288,12 +330,19 @@ ANSWERS_PER_QUESTION = 4
 # Generate a list of all possible tuple combinations:
 PERMUTATIONS = [i for i in itertools.permutations(range(ANSWERS_PER_QUESTION))]
 
-# If a original image should be replaced, the new image has to be in this path
-# and need the same name after been exported (see dev export, var new_image_name):
+# If an original image should be replaced, the new image has to be in this path
+# and need the same name after being exported (see dev export, var new_image_name):
 IMAGE_REPLACEMENT_PATH = "input-files/new-images-as-replacement/"
 
 # Separator on console output
 print(' ')
+
+xlsx_row = 0
+workbook = None
+worksheet = None
+
+# Wird die nachfolgende for-Schleife zum ersten Mal durchlaufen?
+first_pool_argument = True
 
 # Loop for every question pool in the command line arguments
 for pool_argument in list_scheduled_pools:
@@ -315,8 +364,8 @@ for pool_argument in list_scheduled_pools:
 
     # Set path, file name and worksheet for new category names:
     NEW_CATEGORY_PATH = 'input-files/new-category-names/'
-    NEW_CATEGORY_XLSX = dict_pool_arguments.get(get_active_pool()) + '-new-category-names.xlsx'
-    NEW_CATEGORY_SHEET = 'Kategorie-Namen'
+    NEW_CATEGORY_XLSX = 'new-category-names.xlsx'
+    NEW_CATEGORY_SHEET = dict_pool_arguments.get(get_active_pool())
     new_categories = {}
 
     # Read the new categories (Dictionary):
@@ -328,7 +377,12 @@ for pool_argument in list_scheduled_pools:
 
     # The name of the folder for the output data can be
     # chosen freely. It is created in the project folder.
-    OUTPUT_FILE_PATH = 'output-files/Card2Brain_' + dict_pool_arguments.get(get_active_pool()) + '/'
+    OUTPUT_FILE_PATH = 'output-files/Card2Brain_'
+    if '-a' in sys.argv:
+        OUTPUT_FILE_PATH += 'All-in-one'
+    else:
+        OUTPUT_FILE_PATH += dict_pool_arguments.get(get_active_pool())
+    OUTPUT_FILE_PATH += '/'
 
     # The name of the Excel file can be chosen freely.
     OUTPUT_XLSX_FILE_NAME = "xlsx-for-c2b-import.xlsx"
@@ -355,18 +409,10 @@ for pool_argument in list_scheduled_pools:
             print(f"Error message was generated when creating the folder path: {e}")
             exit_with_line_info("Could not generate path 'OUTPUT_IMG_PATH = " + OUTPUT_IMG_PATH)
 
-    # Open the Excel file in the output file folder:
-    workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+    # Check if a Excel file has to be opened or if an allready opened Excel file will be used
+    open_close_excel(open_file=True, first_call=first_pool_argument)
 
-    # Open a worksheet in the Excel file:
-    worksheet = workbook.add_worksheet('Fragen')
-
-    # Write row[0], the title row, in the worksheet of the Excel file:
-    title=('Id','Stapel','','Frage-Typ','Frage','Antwort','Instruction','Ergänzung F','Phonetics F','Beispielsatz F','Audio F','Bild F','Ergänzung A','Phonetics A','Beispielsatz A','Audio A','Bild A','MCA1 Correct','MCA1 Text','MCA2 Correct','MCA2 Text','MCA3 Correct','MCA3 Text','MCA4 Correct','MCA4 Text','MCA5 Correct','MCA5 Text','Copyright Image F','Copyright Image A','Copyright Audio F','Copyright Audio A')
-    title_format = workbook.add_format({'bold': True})
-    worksheet.write_row(0, 0, title, title_format)
-
-    #  Links of images in the JSON file have this character sequence:
+    # Links of images in the JSON file have this character sequence:
     image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
 
     if '-dfrac' in sys.argv:
@@ -387,9 +433,11 @@ for pool_argument in list_scheduled_pools:
     else:
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
-    workbook.close()
+    first_pool_argument = False
+# end of: for pool_argument in list_scheduled_pools
 
-    print('  --> the output data is stored in <' + OUTPUT_FILE_PATH +'>')
+# close (the last) Excel file
+open_close_excel(open_file=False)
 
 print("Mission accomplished for the arguments " + str(sys.argv[1:]))
 if '-l' in sys.argv:
