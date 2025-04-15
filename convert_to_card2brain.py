@@ -1,7 +1,7 @@
 # Mat says:
 # FIXME This code needs major cleanup before it can be merged.
 
-# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-c] [-l] [-s] [-dfrac] [-beta|-math]
+# Usage: python convert_to_card2brain [-?] [-e06] [-a07] [-e24] [-a24] [-a] [-c] [-l] [-dfrac] [-beta|-math]
 # Parameters '-beta' and '-math' is only for beta testing
 # For more info, use parameter '-?'
 
@@ -11,7 +11,7 @@
 # b) for DLE2006 and DLA2007:  /input-files/afu-group-trainer/... with the files
 # c) for DL-2024:  /input-files/50ohm-pocket/... with the files
 # d) for DL-2024:  /input-files/50ohm-pocket__images-to-png-converted/ with the files
-# e) for DL-2024:  /input-files/new-category-names/ with the files (if you use parameter '-c')
+# e) when using parameter '-c': /input-files/new-category-names/new-category-names.xlsx
 #
 # The output files will be placed in a file folder named
 # /output-files/ in your project folder.
@@ -39,6 +39,7 @@ from convert_arguments import (read_out_arguments, list_scheduled_pools, set_act
 import toolkit_images as tk_img # Toolkit for the images (embed labels to images, stacking of images, ...)
 from toolkit_system import exit_with_line_info, dev_print
 from toolkit_categories import read_new_categories_from_xls
+
 
 def shuffle(items, permutation):
     # Set the order in the delivered tuple according to the
@@ -259,46 +260,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
     # end of: for q in questions:
 
     print(str(rows_per_pool) + " rows exported for " + get_active_pool())
-
 # end of: def export
-
-def open_close_excel(open_file : bool, first_call = False):
-
-    global workbook
-    global worksheet
-    global xlsx_row
-
-    if open_file:
-        if not first_call and '-a' not in sys.argv:
-            # close Excel file
-            workbook.close()
-            print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
-
-        if first_call or '-a' not in sys.argv:
-            # Open the Excel file in the output file folder:
-            workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
-
-            # Open a worksheet in the Excel file:
-            worksheet = workbook.add_worksheet('Fragen')
-
-            # Write row[0], the title row, in the worksheet of the Excel file:
-            title = (
-            'Id', 'Stapel', '', 'Frage-Typ', 'Frage', 'Antwort', 'Instruction', 'Ergänzung F', 'Phonetics F',
-            'Beispielsatz F', 'Audio F', 'Bild F', 'Ergänzung A', 'Phonetics A', 'Beispielsatz A', 'Audio A',
-            'Bild A', 'MCA1 Correct', 'MCA1 Text', 'MCA2 Correct', 'MCA2 Text', 'MCA3 Correct', 'MCA3 Text',
-            'MCA4 Correct', 'MCA4 Text', 'MCA5 Correct', 'MCA5 Text', 'Copyright Image F', 'Copyright Image A',
-            'Copyright Audio F', 'Copyright Audio A')
-            title_format = workbook.add_format({'bold': True})
-            worksheet.write_row(0, 0, title, title_format)
-
-            xlsx_row = 0
-        # end of: if first_call or '-a' not in sys.argv
-
-    else:
-        # close Excel file
-        workbook.close()
-        print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
-# end of: dev open_close_excel
 
 # ----------------------------------------------------------
 # End of def - main code starts
@@ -310,7 +272,7 @@ if len(sys.argv) < 2:
     # sys.argv.append('-a07')
     sys.argv.append('-e24')
     # sys.argv.append('-a24')
-    sys.argv.append('-a')
+    # sys.argv.append('-a')
     sys.argv.append('-c')
     sys.argv.append('-dfrac')
     # sys.argv.append('-beta')
@@ -409,8 +371,33 @@ for pool_argument in list_scheduled_pools:
             print(f"Error message was generated when creating the folder path: {e}")
             exit_with_line_info("Could not generate path 'OUTPUT_IMG_PATH = " + OUTPUT_IMG_PATH)
 
-    # Check if a Excel file has to be opened or if an allready opened Excel file will be used
-    open_close_excel(open_file=True, first_call=first_pool_argument)
+    # Check if an Excel file has to be opened or if an already opened Excel file will be used
+    if first_pool_argument or '-a' not in sys.argv:
+
+        if not first_pool_argument:
+            # close the Excel file from previous pool argument
+            workbook.close()
+            print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
+
+        # Open (the next) Excel file in the output file folder:
+        workbook = xlsxwriter.Workbook(OUTPUT_FILE_PATH + OUTPUT_XLSX_FILE_NAME)
+
+        # Open a worksheet in the Excel file:
+        worksheet = workbook.add_worksheet('Fragen')
+
+        # Write row[0], the title row, in the worksheet of the Excel file:
+        title = (
+            'Id', 'Stapel', '', 'Frage-Typ', 'Frage', 'Antwort', 'Instruction', 'Ergänzung F', 'Phonetics F',
+            'Beispielsatz F', 'Audio F', 'Bild F', 'Ergänzung A', 'Phonetics A', 'Beispielsatz A', 'Audio A',
+            'Bild A', 'MCA1 Correct', 'MCA1 Text', 'MCA2 Correct', 'MCA2 Text', 'MCA3 Correct', 'MCA3 Text',
+            'MCA4 Correct', 'MCA4 Text', 'MCA5 Correct', 'MCA5 Text', 'Copyright Image F', 'Copyright Image A',
+            'Copyright Audio F', 'Copyright Audio A')
+        title_format = workbook.add_format({'bold': True})
+        worksheet.write_row(0, 0, title, title_format)
+
+        # Initialize the counter, which row was written last
+        xlsx_row = 0
+    # end of: if first_pool_argument or '-a' not in sys.argv:
 
     # Links of images in the JSON file have this character sequence:
     image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
@@ -437,8 +424,10 @@ for pool_argument in list_scheduled_pools:
 # end of: for pool_argument in list_scheduled_pools
 
 # close (the last) Excel file
-open_close_excel(open_file=False)
+workbook.close()
+print('  --> the output data is stored in <' + OUTPUT_FILE_PATH + '>')
 
+# Print final infos
 print("Mission accomplished for the arguments " + str(sys.argv[1:]))
 if '-l' in sys.argv:
     print("Argument '-l' (Lichtblicke) is not supported by the Card2Brain app.")
