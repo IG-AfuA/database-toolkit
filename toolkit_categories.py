@@ -1,14 +1,11 @@
 # Standard packages:
-# import os
+# ---
 
 # Additional packages (have to be installed):
-import openpyxl
-# import xlsxwriter
+import openpyxl  # read Excel files
 
 # Project files:
 from toolkit_system import exit_with_line_info, dev_print
-# from json_parser import json_parser
-# from convert_arguments import dict_pool_arguments
 
 
 def read_new_categories_from_xls(xls_path_name, xls_file_name, xls_sheet_name) -> dict:
@@ -16,16 +13,19 @@ def read_new_categories_from_xls(xls_path_name, xls_file_name, xls_sheet_name) -
     # Open the Excel file:
     try:
         workbook = openpyxl.load_workbook(xls_path_name + xls_file_name)
-    except OSError as e:
+    except:
         exit_with_line_info("Could not open '" + xls_path_name + xls_file_name + "' ")
 
     # Open the sheet in the Excel file:
-    worksheet = workbook[xls_sheet_name]
+    try:
+        worksheet = workbook[xls_sheet_name]
+    except:
+        exit_with_line_info("Could not open Excel worksheet '" + xls_sheet_name + "'. Please check the correct name.")
 
     # Initialize the dictionary
     result_dict = {}
 
-    # Lets monitore if a Code (in column 0) is used more than once:
+    # Lets monitore if a Code (in column 1) is used more than once:
     check_duplicates = []
 
     # Read the needed rows in the Excel;
@@ -68,5 +68,5 @@ def read_new_categories_from_xls(xls_path_name, xls_file_name, xls_sheet_name) -
 if __name__ == '__main__':
 
     dev_print("Pepe's Test")
-    pepe_dict = read_new_categories_from_xls('input-files/new-category-names/','DLE-2024-new-category-names.xlsx', 'Kategorie-Namen')
+    pepe_dict = read_new_categories_from_xls('input-files/new-category-names/','new-category-names.xlsx', 'DLA-2024')
     dev_print(pepe_dict.keys())
