@@ -204,7 +204,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # Text for field 'Ergänzung Antwort' in the XLSX file:
             info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
 
-            # Category name - and sorting_id according to category name
+            # The exam level is sorting criteria within a category (see following code block):
             if '-e24' == get_active_pool() and q.question_id[0] == 'N':  # exam level entry licence
                 sort_n_e_a = '1'
             elif get_active_pool() in ['-e06', '-e24']:    # exam level novice licence
@@ -212,18 +212,16 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             else:                                           # exam level cept licence
                 sort_n_e_a = '3'
 
+            # Category name and sorted question id are depending on the '-c' parameter
             if '-c' in sys.argv:
                 category_name = new_categories.get(q.question_id[:-2])
-                if category_name is None:
-                    exit_with_line_info("In '" + NEW_CATEGORY_XLSX + "' fehlt die Kategorie für den Code '" + q.question_id[:-2] +"' (Question-ID '" + q.question_id +  "'). ")
-
                 sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + dict_pool_arguments.get(get_active_pool()) + '_' + q.question_id
-
             else:
                 category_name = q.category
-                sorted_question_id = sort_n_e_a + '_' + q.question_id
+                sorted_question_id = sort_n_e_a + '_' + dict_pool_arguments.get(get_active_pool()) + '_' + q.question_id
 
-            # write a row in the xlsx-file:
+            # Before writing a row in the Excel file
+            # we have to clean some strings:
             if math_or_image_in_answer:
 
                 # Some Latex term are to lang for the C2B app

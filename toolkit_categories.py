@@ -39,27 +39,38 @@ def read_new_categories_from_xls(xls_path_name, xls_file_name, xls_sheet_name) -
         if key is not None:
             if key not in check_duplicates:
 
+                # Check if every Code has also a category name
+                if value is None:
+                    dev_print("Code = '" + key + "'; Category name = None")
+                    exit_with_line_info(
+                        "Code in column 1 without category name in column 3 in worksheet '" + xls_sheet_name + "' in file '" + xls_file_name + "'")
+
+                # We have a correct new pair of 'code' and 'category name':
                 # Add a new pair to the dictionary:
                 result_dict[key] = value
                 check_duplicates.append(key)
             else:
                 #  Exit wih error message because key exists twice
-                dev_print("Key = '" + key + "' exists twice:  <--- check this key")
+                dev_print("Code = '" + key + "' exists twice:  <--- check this key")
                 if result_dict.get(key) is not None:
-                    dev_print("--> First  value = '" + result_dict.get(key) + "'")
+                    dev_print("--> First  Code = '" + result_dict.get(key) + "'")
                 else:
-                    dev_print("--> First  value = None")
+                    dev_print("--> First  Code = None")
                 if value is not None:
-                    dev_print("--> Second value = '" + value + "'")
+                    dev_print("--> Second Code = '" + value + "'")
                 else:
-                    dev_print("--> Second value = None")
+                    dev_print("--> Second Code = None")
                 dev_print("worksheet.max_row = " + str(worksheet.max_row) + " <--- check, if correct")
-                exit_with_line_info("Duplicates in column 0 in worksheet '" + xls_sheet_name + "' in file '" + xls_file_name + "'")
+                exit_with_line_info("Duplicates in column 1 in worksheet '" + xls_sheet_name + "' in file '" + xls_file_name + "'")
         else:
+            # If 'code' is None and 'category name' is None, everything is fine.
+            # We just ignore this empty row.
+            #
+            # But if there is a category name without code:
             if value is not None:
-                #  Exit wih error message because of invalid pair of code and category name
-                dev_print("key = None; value = '" + value + "'")
-                exit_with_line_info("Value in column 2 without key in column 0 in worksheet '" + xls_sheet_name + "' in file '" + xls_file_name + "'")
+                #  Exit with error message because of invalid pair of code and category name
+                dev_print("Code = None; category name = '" + value + "'")
+                exit_with_line_info("Category name in column 3 without Code in column 1 in worksheet '" + xls_sheet_name + "' in file '" + xls_file_name + "'")
 
     # Return a dictionary with all codes and category names
     return result_dict
