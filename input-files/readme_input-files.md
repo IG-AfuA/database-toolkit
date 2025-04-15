@@ -15,7 +15,10 @@ For exam question pool DL-2024 (including the levels "Klasse N",
 
 and if desired
 
-* `50ohm-pocket__images-replaced`
+* `new-images-as-replacement`
+
+For details read the README.md of this project.
+
 
 
 ## Exam question pool  DLE-2006 and  DLA-2007
@@ -26,7 +29,10 @@ For exam question pool DL-2024 you need the folder
 
 and if desired
 
-* `afu-group-trainer__images-replaced`
+* `new-images-as-replacement`
+
+For details read the README.md of this project.
+
 
 
 ## Convertion to Card2Brain
@@ -34,6 +40,5 @@ and if desired
 Using the Convertion tool for Card2Brain you need also:
 
 * `\input-files\fonts\DejaVuSans.ttf`
-
 
 
