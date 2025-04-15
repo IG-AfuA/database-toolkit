@@ -6,7 +6,7 @@
 # For more info, use parameter '-?'
 
 # Check before running the tool:
-# Following file paths must exist in your project folder;
+# The following file paths must exist in your project folder;
 # a) always:  /input-files/fonts/DejaVuSans.ttf
 # b) for DLE2006 and DLA2007:  /input-files/afu-group-trainer/... with the files
 # c) for DL-2024:  /input-files/50ohm-pocket/... with the files
@@ -55,8 +55,13 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
     # Sort the question pool by question_id
     sorted_questions = sorted(questions, key=lambda x: x.question_id)
 
-    # for q in sorted_questions:
+    # This counter counts the exported rows (exam questions).
+    # The result will be printed on the console. This can alert you
+    # if the value differs greatly from the expected number (then
+    # check whether the parameters are set correctly).
     rows_per_pool = 0
+
+    # Question by question is now being processed and exported:
     for q in sorted_questions:
 
         # When parameter '-beta' then check if the question_id is
@@ -68,9 +73,8 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
 
         # Card2Brain only allows plain-text answers. Thus, we have to implement
         # a quirk when answers contain math or images. In this case, answers
-        # are integrated in to the question and prefixed with "A" to "D". This
-        # looks weird when Card2Brain shuffles answers since "A" to "D" appears
-        # in a strange order. We therefore only want to do that if necessary.
+        # are integrated in to the question and prefixed with a label sign.
+        # In the answer fields will be only the corresponding label sign.
 
         # --- BEGIN with preparing the export ---
 
@@ -86,22 +90,25 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
         labels_new_order = shuffle(LABELS, permutation_labels)
 
         math_or_image_in_answer = False # info needed wenn writing a row in Excel sheet
-        count_images = 0    # In case we have more than one image, we have to group them one image.
+        count_images = 0    # In case we have more than one image, we have to group them to one image.
         image_col = []      # needed for grouping images
 
         question_text, question_images = extract_image(q.question_text)
 
         if question_images is not None:
+
             # If an image was embedded in the middle of the question text
             # then there was usually a <br> tag before and after it, which now has to be removed:
             question_text = re.sub(r'<br><br>', ' ', question_text)
 
             # If an image was embedded before or after the question text
             # then there was usually a <br> between image and text,
-            # which now has to be removed:
-            #FIXME Geht das  auch eleganter? @Mats
+            # which now has to be removed
+            #  (But only remove these surplus <br>-tags at the beginning and at the end of
+            #  'question_text'. Do not remove the desired <br>-tags in the middle of the string.)
             if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
                 question_text = question_text[4:]
+                # FIXME Geht das  auch eleganter? @Mats
             if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
                 question_text = question_text[:-4]
 
@@ -204,7 +211,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # Text for field 'Ergänzung Antwort' in the XLSX file:
             info_question_id = '(Frage-ID: ' + dict_pool_arguments.get(get_active_pool()) + '-' + q.question_id + ')'
 
-            # The exam level is sorting criteria within a category (see following code block):
+            # The exam level is a sorting criteria within a category (see following code block):
             if '-e24' == get_active_pool() and q.question_id[0] == 'N':  # exam level entry licence
                 sort_n_e_a = '1'
             elif get_active_pool() in ['-e06', '-e24']:    # exam level novice licence
@@ -224,7 +231,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # we have to clean some strings:
             if math_or_image_in_answer:
 
-                # Some Latex term are to lang for the C2B app
+                # Some Latex term are to long for the C2B app
                 # (in DLE-2006 2 questions and in DLA-2007 2 questions)
                 # Therefore: Divide long <span></span> terms in smaller ones
                 question_text = question_text.replace(r'+\text',r'\)</span> <span class="math-tex">\(\:+\:\text')
@@ -244,6 +251,9 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
 
             # end of: if math_or_image_in_answer:
 
+            # If this question has images (regardless whether
+            # they belong to the question or to the answers),
+            # then check if a replacement image is available:
             if new_question_image != "":
                 try:
                     shutil.copyfile(IMAGE_REPLACEMENT_PATH + new_question_image, OUTPUT_IMG_PATH + new_question_image)
@@ -301,7 +311,10 @@ xlsx_row = 0
 workbook = None
 worksheet = None
 
-# Wird die nachfolgende for-Schleife zum ersten Mal durchlaufen?
+# Is the following for-loop being run for the first time?
+#  (Info needed for: Depending on the '-a' parameter, the
+#   previous Excel file will be used again or a new Excel file
+#   has to be opened when the for-loop is repeated.)
 first_pool_argument = True
 
 # Loop for every question pool in the command line arguments
@@ -322,17 +335,19 @@ for pool_argument in list_scheduled_pools:
     if not os.path.exists(IMG_BASE_PATH):
         exit_with_line_info('path to input files does not exist')
 
-    # Set path, file name and worksheet for new category names:
-    NEW_CATEGORY_PATH = 'input-files/new-category-names/'
-    NEW_CATEGORY_XLSX = 'new-category-names.xlsx'
-    NEW_CATEGORY_SHEET = dict_pool_arguments.get(get_active_pool())
-    new_categories = {}
-
     # Read the new categories (Dictionary):
     if '-c' in sys.argv:
+
+        # Name and path for the Excel file with the new category names:
+        NEW_CATEGORY_PATH = 'input-files/new-category-names/'
+        NEW_CATEGORY_XLSX = 'new-category-names.xlsx'
+        NEW_CATEGORY_SHEET = dict_pool_arguments.get(get_active_pool())
+
+        new_categories = {}
         if not os.path.exists(NEW_CATEGORY_PATH):
             exit_with_line_info("Path to '" + NEW_CATEGORY_PATH +"' does not exist (used with parameter '-c') ")
 
+        # Make a dictionary with the new category names:
         new_categories = read_new_categories_from_xls(NEW_CATEGORY_PATH,NEW_CATEGORY_XLSX, NEW_CATEGORY_SHEET)
 
     # The name of the folder for the output data can be
