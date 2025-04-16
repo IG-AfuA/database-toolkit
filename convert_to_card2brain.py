@@ -31,12 +31,12 @@ import xlsxwriter
 # Project files:
 from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
                          extract_image, math_signs_much_less_n_much_greater,
-                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac) # FIXME Issue #12
-from json_parser import json_parser as json_parser2007 # Parser for DLE2006 and DLA2007
-from json_parser_DLEDLA2024 import json_parser as json_parser2024 # Parser for DLE2024 and DLA2024
+                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac)  # FIXME Issue #12
+from json_parser import json_parser as json_parser2007  # Parser for DLE2006 and DLA2007
+from json_parser_DLEDLA2024 import json_parser as json_parser2024  # Parser for DLE2024 and DLA2024
 from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
                                dict_pool_arguments, beta_test_exam_questions, get_active_pool)
-import toolkit_images as tk_img # Toolkit for the images (embed labels to images, stacking of images, ...)
+import toolkit_images as tk_img  # Toolkit for the images (embed labels to images, stacking of images, ...)
 from toolkit_system import exit_with_line_info, dev_print
 from toolkit_categories import read_new_categories_from_xls
 
@@ -48,7 +48,8 @@ def shuffle(items, permutation):
     # but identical 'permutation', the order will be changed identically each time.
     return tuple(items[p] for p in PERMUTATIONS[permutation])
 
-def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
+
+def export(questions):
 
     global xlsx_row
 
@@ -82,16 +83,16 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
         # and change then the order in an identical manner for answers and solutions:
         permutation_answers = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
         answers_new_order = shuffle((q.answer_0, q.answer_1, q.answer_2, q.answer_3), permutation_answers)
-        solutions_new_order = shuffle(('x','','',''), permutation_answers)
+        solutions_new_order = shuffle(('x', '', '', ''), permutation_answers)
 
         # Change the order for the labels but use a different randomized order
         # (otherwise always the same label is the correct answer).
         permutation_labels = random.randrange(math.factorial(ANSWERS_PER_QUESTION))
         labels_new_order = shuffle(LABELS, permutation_labels)
 
-        math_or_image_in_answer = False # info needed wenn writing a row in Excel sheet
-        count_images = 0    # In case we have more than one image, we have to group them to one image.
-        image_col = []      # needed for grouping images
+        math_or_image_in_answer = False  # info needed wenn writing a row in Excel sheet
+        count_images = 0  # In case we have more than one image, we have to group them to one image.
+        image_col = []  # needed for grouping images
 
         question_text, question_images = extract_image(q.question_text)
 
@@ -106,10 +107,12 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # which now has to be removed
             #  (But only remove these surplus <br>-tags at the beginning and at the end of
             #  'question_text'. Do not remove the desired <br>-tags in the middle of the string.)
-            if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[3] == '>':
+            if question_text[0] == '<' and question_text[1] == 'b' and question_text[2] == 'r' and question_text[
+                3] == '>':
                 question_text = question_text[4:]
                 # FIXME Geht das  auch eleganter? @Mats
-            if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[-1] == '>':
+            if question_text[-4] == '<' and question_text[-3] == 'b' and question_text[-2] == 'r' and question_text[
+                -1] == '>':
                 question_text = question_text[:-4]
 
         if question_images is None:
@@ -121,11 +124,11 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # and now wait if further images will be added from the answers.
             # Only then decide whether the image should remain unchanged or grouped.
 
-        else: # len(question_images) > 1:
+        else:  # len(question_images) > 1:
             count_images += len(question_images)
             new_question_image = re.sub(r'/', '_', question_images[0])
             for img_nr in range(len(question_images)):
-                image_col.append(tk_img.load(IMG_BASE_PATH+question_images[img_nr]))
+                image_col.append(tk_img.load(IMG_BASE_PATH + question_images[img_nr]))
 
         # End of: if question_images ... / elif len(question_images) ...
 
@@ -145,15 +148,15 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             image_col.append(tk_img.render_text('Vorgeschlagene Antworten:'))
 
             # grouping all infos to one picture
-            for label,answer in zip(labels_new_order,answers_new_order):
-                image_row = [tk_img.render_text(label),]
+            for label, answer in zip(labels_new_order, answers_new_order):
+                image_row = [tk_img.render_text(label), ]
                 image_tags = re.findall(image_tag, answer)
-                assert(len(image_tags) == 1) # check if allways one image per answer option
+                assert (len(image_tags) == 1)  # check if allways one image per answer option
                 match = re.search(image_tag, answer)
                 prefix = answer[:match.start()]
                 postfix = answer[match.end():]
                 image_row.append(tk_img.render_text(prefix))
-                image_row.append(tk_img.load(IMG_BASE_PATH+image_tags[0]))
+                image_row.append(tk_img.load(IMG_BASE_PATH + image_tags[0]))
                 image_row.append(tk_img.render_text(postfix))
                 image_col.append(tk_img.tile_images_horizontally(image_row))
 
@@ -162,7 +165,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             new_question_image = dict_pool_arguments.get(get_active_pool()) + "_" + new_question_image
             answer_image.save(OUTPUT_IMG_PATH + f'{new_question_image}')
 
-        else: # No pictures in answers
+        else:  # No pictures in answers
 
             if count_images == 1:
                 new_question_image = re.sub(r'/', '_', question_images[0])
@@ -180,7 +183,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
                 math_or_image_in_answer = True
                 for a1, a2 in zip(labels_new_order, answers_new_order):
                     question_text += '<br><br>'
-                    question_text += f'<strong>{a1}:</strong>&nbsp;&nbsp;&nbsp;{a2}' # 3 spaces between label and text are intentional
+                    question_text += f'<strong>{a1}:</strong>&nbsp;&nbsp;&nbsp;{a2}'  # 3 spaces between label and text are intentional
 
         # End of: if '<img ' in q.answer_0: / else:
 
@@ -193,7 +196,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
         # only question with a html tag for latex terms
         if '-math' in sys.argv:
             if '<span' not in question_text:
-                export_this_question =  False
+                export_this_question = False
 
         # Don't export exam question when not in chapter 'Technische Kenntnisse'
         if '-e24' == get_active_pool():
@@ -205,7 +208,7 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
                 export_this_question = False
 
         if export_this_question:
-            xlsx_row += 1       # row in the Excel file, needed for the writing into the Excel file
+            xlsx_row += 1  # row in the Excel file, needed for the writing into the Excel file
             rows_per_pool += 1  # count for each question pool separately; needed just as info
 
             # Text for field 'Ergänzung Antwort' in the XLSX file:
@@ -214,40 +217,53 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
             # The exam level is a sorting criteria within a category (see following code block):
             if '-e24' == get_active_pool() and q.question_id[0] == 'N':  # exam level entry licence
                 sort_n_e_a = '1'
-            elif get_active_pool() in ['-e06', '-e24']:    # exam level novice licence
+            elif get_active_pool() in ['-e06', '-e24']:  # exam level novice licence
                 sort_n_e_a = '2'
-            else:                                           # exam level cept licence
+            else:  # exam level cept licence
                 sort_n_e_a = '3'
 
-            # Category name and sorted question id are depending on the '-c' parameter
+            # Category name and sorted question id depend on the '-c' parameter
             if '-c' in sys.argv:
                 category_name = new_categories.get(q.question_id[:-2])
-                sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + dict_pool_arguments.get(get_active_pool()) + '_' + q.question_id
+                sorted_question_id = category_name[:5] + '_' + sort_n_e_a + '_' + dict_pool_arguments.get(
+                    get_active_pool()) + '_' + q.question_id
             else:
                 category_name = q.category
                 sorted_question_id = sort_n_e_a + '_' + dict_pool_arguments.get(get_active_pool()) + '_' + q.question_id
 
-            # Before writing a row in the Excel file
-            # we have to clean some strings:
+            # The answer field consists of the actual answer options or – if the
+            # answer includes a math term or image – only the label signs. The
+            # four answer fields are now filled in accordingly. -- And last chance
+            # to clean the strings for the question field and answer fields:
+            final_answer = []
             if math_or_image_in_answer:
 
-                # Some Latex term are to long for the C2B app
+                # Some Latex term are too long for the C2B app
                 # (in DLE-2006 2 questions and in DLA-2007 2 questions)
                 # Therefore: Divide long <span></span> terms in smaller ones
-                question_text = question_text.replace(r'+\text',r'\)</span> <span class="math-tex">\(\:+\:\text')
+                question_text = question_text.replace(r'+\text', r'\)</span> <span class="math-tex">\(\:+\:\text')
                 question_text = question_text.replace(r'-\text', r'\)</span> <span class="math-tex">\(\:-\:\text')
                 question_text = question_text.replace(r'·\text', r'\)</span> <span class="math-tex">\(\:·\:\text')
 
-                # Write the next row (with answers with math or/and images) into the Excel worksheet
-                worksheet.write_row(xlsx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],labels_new_order[0],solutions_new_order[1],labels_new_order[1],solutions_new_order[2],labels_new_order[2],solutions_new_order[3],labels_new_order[3],'','','','','',''])
-            else:
-                # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):
-                final_answer = []
-                for i in range(0,ANSWERS_PER_QUESTION):
-                    final_answer.append(answers_new_order[i].replace('<br>',' —— ')) # best result in C2B app with ' —— '
+                # The answer field contains (only) a label sign:
+                for i in range(0, ANSWERS_PER_QUESTION):
+                    final_answer.append(labels_new_order[i])
 
-                # Write the next row (with only plain text answers) into the Excel worksheet
-                worksheet.write_row(xlsx_row,0,[sorted_question_id,category_name,'','multipleChoice',question_text,'','','','','','',new_question_image,info_question_id,'','','','',solutions_new_order[0],final_answer[0],solutions_new_order[1],final_answer[1],solutions_new_order[2],final_answer[2],solutions_new_order[3],final_answer[3],'','','','','',''])
+            else:
+
+                # Remove all <br> tags in the answers (in DLE-2007 in 6 questions):1
+                for i in range(0, ANSWERS_PER_QUESTION):
+                    final_answer.append(
+                        answers_new_order[i].replace('<br>', ' —— '))  # best result in C2B app with ' —— '
+
+            # Write the next row into the Excel worksheet
+            worksheet.write_row(xlsx_row, 0,
+                                [sorted_question_id, category_name, '', 'multipleChoice', question_text,
+                                 '', '', '', '', '', '', new_question_image, info_question_id, '', '', '', '',
+                                 solutions_new_order[0], final_answer[0],
+                                 solutions_new_order[1], final_answer[1],
+                                 solutions_new_order[2], final_answer[2],
+                                 solutions_new_order[3], final_answer[3], '', '', '', '', '', ''])
 
             # end of: if math_or_image_in_answer:
 
@@ -268,6 +284,8 @@ def export(questions, pool : str): #FIXME Parameter 'pool' is now longer used
     # end of: for q in questions:
 
     print(str(rows_per_pool) + " rows exported for " + get_active_pool())
+
+
 # end of: def export
 
 # ----------------------------------------------------------
@@ -292,7 +310,7 @@ if len(sys.argv) < 2:
 read_out_arguments(sys.argv)
 
 # Labels for those answers with pictures or math formulas:
-LABELS = ('Œ','Ø','][','@')
+LABELS = ('Œ', 'Ø', '][', '@')
 
 # Multiple choice test with ... answers per question:
 ANSWERS_PER_QUESTION = 4
@@ -322,10 +340,10 @@ for pool_argument in list_scheduled_pools:
 
     set_active_pool(pool_argument)
 
-    if pool_argument in ['-e06','-a07']:      # Is it one of these two pools?
+    if pool_argument in ['-e06', '-a07']:  # Is it one of these two pools?
         tk_img.set_font_size(24)
         IMG_BASE_PATH = 'input-files/afu-group-trainer/frontend/static/img/'
-    elif pool_argument in ['-e24','-a24']:    # or is it one of these two pools?
+    elif pool_argument in ['-e24', '-a24']:  # or is it one of these two pools?
         tk_img.set_font_size(36)
         IMG_BASE_PATH = 'input-files/50ohm-pocket__images-converted-to-png/'
     else:
@@ -345,10 +363,10 @@ for pool_argument in list_scheduled_pools:
 
         new_categories = {}
         if not os.path.exists(NEW_CATEGORY_PATH):
-            exit_with_line_info("Path to '" + NEW_CATEGORY_PATH +"' does not exist (used with parameter '-c') ")
+            exit_with_line_info("Path to '" + NEW_CATEGORY_PATH + "' does not exist (used with parameter '-c') ")
 
         # Make a dictionary with the new category names:
-        new_categories = read_new_categories_from_xls(NEW_CATEGORY_PATH,NEW_CATEGORY_XLSX, NEW_CATEGORY_SHEET)
+        new_categories = read_new_categories_from_xls(NEW_CATEGORY_PATH, NEW_CATEGORY_XLSX, NEW_CATEGORY_SHEET)
 
     # The name of the folder for the output data can be
     # chosen freely. It is created in the project folder.
@@ -366,13 +384,13 @@ for pool_argument in list_scheduled_pools:
     OUTPUT_IMG_PATH = OUTPUT_FILE_PATH + 'media/images/'
 
     # Choose the correct parser
-    if pool_argument in ['-e06','-a07']:
+    if pool_argument in ['-e06', '-a07']:
         qp = json_parser2007()
-    elif pool_argument in ['-e24','-a24']:
+    elif pool_argument in ['-e24', '-a24']:
         qp = json_parser2024()
         qp.attach_text_processor(remove_flaws_coming_from_json_source)
     else:
-        qp = json_parser2007() # qp assignment just for stopping PyCharm annoying me with an error message.
+        qp = json_parser2007()  # qp assignment just for stopping PyCharm annoying me with an error message.
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
     # Checking whether the folder path with all the required subfolders
@@ -426,10 +444,10 @@ for pool_argument in list_scheduled_pools:
         qp.attach_text_processor(math_signs_much_less_n_much_greater)
 
     # Generate the Excel file and image folder for Card2Brain:
-    if pool_argument in ['-e06','-e24']: # novice licence question pools
-        export(qp.novice_questions(), 'HB3')
-    elif pool_argument in ['-a07','-a24']: # cept licence question pools
-        export(qp.cept_questions(), 'HB9')
+    if pool_argument in ['-e06', '-e24']:  # novice licence question pools
+        export(qp.novice_questions())
+    elif pool_argument in ['-a07', '-a24']:  # cept licence question pools
+        export(qp.cept_questions())
     else:
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
 
