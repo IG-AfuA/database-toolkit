@@ -4,8 +4,10 @@ import json
 from dataclasses import dataclass
 import re
 
+
 # Sample how math terms can be used in Card2Brain app in the question field.
-# <span class="math-tex">\(\frac{P}{U^2} = R\)</span></p>
+# <p><span class="math-tex">\(\frac{P}{U^2} = R\)</span></p>
+
 
 # FIXME @Mats: Is this note still needed?
 # - Translate $>>$ and $<<$
@@ -28,12 +30,15 @@ BASE_URL = 'https://classmarker.example.com/static/'
 assert(BASE_URL.startswith('https://'))
 assert(BASE_URL.endswith('/'))
 
+
 # ===================================
-# BEGIN AUSLAGERN
+# START of function definitions
 # ===================================
 
+# Exchange the german letter 'ß' with 'ss' as used in Switzerland:
 def eszett_to_ss(text: str):
     return re.sub(r'ß', 'ss', text)
+
 
 # '≪' and '≫' instead of '<<' and '>>'
 def math_signs_much_less_n_much_greater(text: str):
@@ -41,6 +46,9 @@ def math_signs_much_less_n_much_greater(text: str):
     text = re.sub(r'>>', '≫', text)
     return text
 
+
+# In question pool DL-2024 we have some flaws,
+# which have to be removed:
 def remove_flaws_coming_from_json_source(text: str):
 
     # Flaw in DL-2024 question pools:
@@ -73,6 +81,8 @@ def remove_flaws_coming_from_json_source(text: str):
 
     return text
 
+
+# Transform html-code to BBCode (e.g. used for ClassMaker):
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
     html_str = re.sub(r'<strong>(.*?)</strong>', r'[b]\1[/b]', html_str)
@@ -83,6 +93,9 @@ def html_to_bbcode(html_str: str):
 
     return html_str
 
+
+# Transform Latex notation (of greek letters and math terms)
+# to UTF8 notation:
 def latex_to_utf8(text: str):
 
     def _latex_to_utf8(match:re.Match):
@@ -111,9 +124,11 @@ def latex_to_utf8(text: str):
         else:
             return text
 
-
     return re.sub(r'\$(.*?)\$', _latex_to_utf8, text)
 
+
+# Transform Latex notation for superscript and subscript
+# to UTF8 notation:
 def latex_to_utf8_subsuperscript(text: str):
     def _latex_to_utf8_subsuperscript(match:re.Match):
         def _latex_to_utf8_superscript(match:re.Match):
@@ -173,6 +188,9 @@ def latex_to_utf8_subsuperscript(text: str):
 
     return re.sub(r'\$(.*?)\$', _latex_to_utf8_subsuperscript, text)
 
+
+# Transform Latex notation (for superscript, subscript and simple fractions):
+# to BB-Code notation:
 def latex_to_bbcode(text: str):
 
     def _latex_to_bbcode(match:re.Match):
@@ -206,23 +224,26 @@ def latex_to_bbcode(text: str):
 
     return re.sub(r'\$(.*?)\$', _latex_to_bbcode, text)
 
+
 # Converts $...$ to \(...\)
 def latex_dollar_to_pars(latex_str: str):
     return re.sub(r'\$(.*?)\$', r'\\(\1\\)', latex_str)
 
+
 # Used to surround TeX equations with '<span class="math-tex">'
 # tags, necessary in card2brain exports.
 def to_card2brain(text:str):
-    #text = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', text)
     def _latex_to_card2brainmath(match:re.Match):
         text = match.group(0)[1:-1] # Strip dollars
         return '<span class="math-tex">\(' + text + '\)</span>'
 
     return re.sub(r'\$(.*?)\$', _latex_to_card2brainmath, text)
 
-# Experimental:
+
+# All math terms with fraction shall use \dfrac instead of \frac:
 def latex_frac_to_dfrac(latex_str:str):
     return re.sub(r'\\frac', r'\\dfrac', latex_str)
+
 
 # This can be used for debugging
 def print_latex(text: str):
@@ -232,6 +253,10 @@ def print_latex(text: str):
         print(eq)
     return(text)
 
+
+# Extract the image name and return
+#  a. the question text with removed image tag
+#  b. the names of the removed images
 def extract_image(text: str):
     image_tag = r'<img src="([^"]*)">'
     image_tags = re.findall(image_tag, text)
@@ -241,13 +266,14 @@ def extract_image(text: str):
         # return:
         # a. Question with removed img tag
         # b. List auf image file names
-        return re.sub(image_tag, '', text), image_tags  # re.sub(pattern, repl, string, ...)
+        return re.sub(image_tag, '', text), image_tags
+
 
 def prefix_static_image_path(text: str):
     return re.sub(r'<img src="(.*?)">', r'<img src="/static/img/\1">', text)
 
 # ===================================
-# END AUSLAGERN
+# END of function definitions
 # ===================================
 
 class json_parser:
@@ -304,8 +330,8 @@ class json_parser:
 
     # Consecutively run each processor on text input
     def _process_text(self, text:str):
-        for p in self.text_processors:
-            text = p(text)
+        for p in self.text_processors:  #FIXME | Issue #20: Wie kann dies für Card2Brain gelöst
+            text = p(text)              #FIXME | ohne die anderen Converter zu tangieren?
         return text
 
 @dataclass

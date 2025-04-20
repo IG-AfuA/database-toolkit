@@ -133,7 +133,7 @@ def export(questions):
         # End of: if question_images ... / elif len(question_images) ...
 
         if '<img ' in q.answer_0:
-            # if statement only checks answer_0 because either all four or none of the four
+            # The if-statement only checks 'answer_0' because either all four or none of the four
             # answer options each consist of one image.
 
             # if there is also 1 (one!) question image, it is now the time, to append it:
@@ -292,17 +292,17 @@ def export(questions):
 # End of def - main code starts
 # ----------------------------------------------------------
 
-#FIXME DEV modus
-if len(sys.argv) < 2:
-    sys.argv.append('-e06')
-    # sys.argv.append('-a07')
-    sys.argv.append('-e24')
-    # sys.argv.append('-a24')
-    # sys.argv.append('-a')
-    sys.argv.append('-c')
-    sys.argv.append('-dfrac')
-    # sys.argv.append('-beta')
-    # sys.argv.append('-math')
+# Only for DEV modus
+#if len(sys.argv) < 2:
+#    sys.argv.append('-e06')
+#    sys.argv.append('-a07')
+#    sys.argv.append('-e24')
+#    sys.argv.append('-a24')
+#    sys.argv.append('-a')
+#    sys.argv.append('-c')
+#    sys.argv.append('-dfrac')
+#    sys.argv.append('-beta')
+#    sys.argv.append('-math')
 
 # Read out the command line arguments:
 # -- Checking: are only expected arguments in the list?
@@ -388,7 +388,6 @@ for pool_argument in list_scheduled_pools:
         qp = json_parser2007()
     elif pool_argument in ['-e24', '-a24']:
         qp = json_parser2024()
-        qp.attach_text_processor(remove_flaws_coming_from_json_source)
     else:
         qp = json_parser2007()  # qp assignment just for stopping PyCharm annoying me with an error message.
         exit_with_line_info("active question pool is not mentioned in the lists in the code lines above.")
@@ -433,17 +432,20 @@ for pool_argument in list_scheduled_pools:
     # Links of images in the JSON file have this character sequence:
     image_tag = r'<img src="([^"]*)">'  # Regular Expression: https://www.w3schools.com/python/python_regex.asp
 
+    # Load the parsing elements:
+    # (They will be executed in qp.novice_questions() and qp.cept_questions() - see following code block.)
+    if '-a07' in sys.argv:
+        qp.attach_text_processor(math_signs_much_less_n_much_greater)
+    elif '-e24' in sys.argv or 'a-24' in sys.argv:
+        qp.attach_text_processor(remove_flaws_coming_from_json_source)
     if '-dfrac' in sys.argv:
-        qp.attach_text_processor(latex_frac_to_dfrac)
-
-    # Parsing elements
+            qp.attach_text_processor(latex_frac_to_dfrac)
     qp.attach_text_processor(latex_to_utf8)
     qp.attach_text_processor(latex_to_utf8_subsuperscript)
     qp.attach_text_processor(to_card2brain)
-    if '-a07' in sys.argv:
-        qp.attach_text_processor(math_signs_much_less_n_much_greater)
 
-    # Generate the Excel file and image folder for Card2Brain:
+    # Execute now all loaded parsing elements and
+    # write the Excel file and image folder for Card2Brain:
     if pool_argument in ['-e06', '-e24']:  # novice licence question pools
         export(qp.novice_questions())
     elif pool_argument in ['-a07', '-a24']:  # cept licence question pools

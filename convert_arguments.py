@@ -102,7 +102,7 @@ def read_out_arguments(arguments):
         print("'-beta' and '-math' can not be used together")
         print_arguments_n_exit()
 
-    # check if at least 1 argument defines a question pool #FIXME
+    # check if at least 1 argument defines a question pool
     count_qp = 0
     for string_element in arguments[1:]:
         if string_element in list_scheduled_pools:
