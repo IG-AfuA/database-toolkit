@@ -4,6 +4,8 @@ import json
 from dataclasses import dataclass
 import re
 
+# Project
+from toolkit_system import dev_print
 
 # Sample how math terms can be used in Card2Brain app in the question field.
 # <p><span class="math-tex">\(\frac{P}{U^2} = R\)</span></p>
@@ -82,6 +84,14 @@ def remove_flaws_coming_from_json_source(text: str):
     return text
 
 
+def remove_flaws_in_plain_text(text: str):
+
+    # In 1 question in DLA-2024 is a '\Omega' in the plain text
+    text = re.sub(r'\\Omega', 'Ω', text)  #
+
+    return text
+
+
 # Transform html-code to BBCode (e.g. used for ClassMaker):
 def html_to_bbcode(html_str: str):
     html_str = re.sub(r'<br>', '\n', html_str)
@@ -92,6 +102,8 @@ def html_to_bbcode(html_str: str):
     # FIXME: Move path 'BASE_URL' to 'convert_to_...'
 
     return html_str
+
+#
 
 
 # Transform Latex notation (of greek letters and math terms)
@@ -107,9 +119,7 @@ def latex_to_utf8(text: str):
         text = re.sub(r'\\delta ?', 'δ', text)
         text = re.sub(r'\\phi ?', 'φ', text)
         text = re.sub(r'\\varphi ?', 'φ', text)
-        text = re.sub(r'\\Omega ?', 'Ω', text)  # \Omega + Leerschlag
-        text = re.sub(r'\\Omega,', 'Ω,', text)  # \Omega + Komma
-
+        text = re.sub(r'\\Omega ?', 'Ω', text)
         text = re.sub(r'\\approx', '≈', text)
         text = re.sub(r'\\cdot{}', '·', text)
         text = re.sub(r'\\cdot ?', '·', text)

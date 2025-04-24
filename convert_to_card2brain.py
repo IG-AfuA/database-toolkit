@@ -31,7 +31,8 @@ import xlsxwriter
 # Project files:
 from json_parser import (latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
                          extract_image, math_signs_much_less_n_much_greater,
-                         remove_flaws_coming_from_json_source, latex_frac_to_dfrac)  # FIXME Issue #12
+                         remove_flaws_coming_from_json_source, remove_flaws_in_plain_text,
+                         latex_frac_to_dfrac)  # FIXME Issue #12
 from json_parser import json_parser as json_parser2007  # Parser for DLE2006 and DLA2007
 from json_parser_DLEDLA2024 import json_parser as json_parser2024  # Parser for DLE2024 and DLA2024
 from convert_arguments import (read_out_arguments, list_scheduled_pools, set_active_pool,
@@ -436,13 +437,17 @@ for pool_argument in list_scheduled_pools:
     # (They will be executed in qp.novice_questions() and qp.cept_questions() - see following code block.)
     if '-a07' in sys.argv:
         qp.attach_text_processor(math_signs_much_less_n_much_greater)
-    elif '-e24' in sys.argv or 'a-24' in sys.argv:
+    elif '-e24' in sys.argv or '-a24' in sys.argv:
         qp.attach_text_processor(remove_flaws_coming_from_json_source)
     if '-dfrac' in sys.argv:
             qp.attach_text_processor(latex_frac_to_dfrac)
     qp.attach_text_processor(latex_to_utf8)
     qp.attach_text_processor(latex_to_utf8_subsuperscript)
     qp.attach_text_processor(to_card2brain)
+
+    # final corrections:
+    if '-a24' in sys.argv: # So far this problem is only in question pool DLA-2024.
+        qp.attach_text_processor(remove_flaws_in_plain_text)
 
     # Execute now all loaded parsing elements and
     # write the Excel file and image folder for Card2Brain:

@@ -8,8 +8,11 @@ from dataclasses import dataclass
 import re
 
 # Project files:
-from json_parser import eszett_to_ss #FIXME Issue 12
-
+from toolkit_system import dev_print
+from json_parser import (eszett_to_ss, latex_to_utf8, latex_to_utf8_subsuperscript, to_card2brain,
+                         extract_image, math_signs_much_less_n_much_greater,
+                         remove_flaws_coming_from_json_source, remove_flaws_in_plain_text,
+                         latex_frac_to_dfrac)  # FIXME Issue #12
 
 # TODO:
 # Check if the following still holds for the 2024 version of the catalog
@@ -23,7 +26,7 @@ from json_parser import eszett_to_ss #FIXME Issue 12
 # 'https://classmarker.example.com/static/'. In this case, the following path
 # is expected to exist and to containing the images:
 # https://classmarker.example.com/static/img/
-# You can pull these files from FIXME
+# You can pull these files from
 
 BASE_URL = 'https://classmarker.example.com/static/'
 
@@ -31,31 +34,14 @@ BASE_URL = 'https://classmarker.example.com/static/'
 assert(BASE_URL.startswith('https://'))
 assert(BASE_URL.endswith('/'))
 
-# ===================================
-# BEGIN AUSLAGERN
-# ===================================
-"""
-
-def eszett_to_ss(text: str):
-    return re.sub(r'ß', 'ss', text)
-
-# Converts $...$ to \(...\)
-def latex_dollar_to_pars(latex_str: str):
-    return re.sub(r'\$(.*?)\$', r'\\(\1\\)', latex_str)
 
 # This can be used for debugging
-def print_latex(text: str):
-    inline_latex = r'\$(.*?)\$'
-    eqs = re.findall(inline_latex, text)
-    for eq in eqs:
-        print(eq)
-    return text
-
-"""
-# ===================================
-# END AUSLAGERN
-# ===================================
-
+# def print_latex(text: str):
+#    inline_latex = r'\$(.*?)\$'
+#    eqs = re.findall(inline_latex, text)
+#    for eq in eqs:
+#        print(eq)
+#    return text
 
 
 # Structure of the JSON files in
@@ -135,16 +121,16 @@ class json_parser:
                     answer3 = self._merge_answer_text_image(question, 'answer_d', 'picture_d')
 
                     q = exam_question(question_id = question['number'],
-                              question_text = question_text,
-                              answer_0 = answer0,
-                              answer_1 = answer1,
-                              answer_2 = answer2,
-                              answer_3 = answer3,
-                              category = eszett_to_ss(category['title']),
-                              subcategory = eszett_to_ss(subcategory['title']))
+                              question_text = self._process_text(question_text),
+                              answer_0 = self._process_text(answer0),
+                              answer_1 = self._process_text(answer1),
+                              answer_2 = self._process_text(answer2),
+                              answer_3 = self._process_text(answer3),
+                              category = self._process_text(category['title']),
+                              subcategory = self._process_text(subcategory['title']))
+                    # dev_print(q.question_id) #FIXME PEPE
+                    # if q.question_id == "AD203": exit() #FIXME PEPE
                     questions.append(q)
-
-                    # print('Pos. Pars2024 l.133: answer0 = ' + str(answer0)) #FIXME PEPE
 
     # Consecutively run each processor on text input
     def _process_text(self, text:str):
