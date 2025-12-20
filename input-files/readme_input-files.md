@@ -23,7 +23,7 @@ For details read the README.md of this project.
 
 ## Exam question pool  DLE-2006 and  DLA-2007
 
-For exam question pool DL-2024 you need the folder
+For exam question pools DLE-2006 and DLA-2007 you need the folder
 
 * `afu-group-trainer`
 
